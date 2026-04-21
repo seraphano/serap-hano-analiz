@@ -5,7 +5,8 @@ import datetime
 
 # --- BAĞLANTI AYARLARI ---
 # Not ettiğin API anahtarını buraya tırnakların içine yapıştır
-API_KEY = "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"
+# Eski satırı (API_KEY = "gsk_...") tamamen sil, yerine bunu yaz:
+API_KEY = st.secrets["GROQ_API_KEY"]
 
 try:
     client = Groq(api_key=API_KEY)
