@@ -64,7 +64,7 @@ with st.form("analiz_formu"):
     
     kardes_sirasi = st.number_input("Annenizin kaçıncı çocuğusunuz?", min_value=1, step=1)
     aile_hikayesi = st.selectbox("Aile geçmişinizde (göç, erken kayıp, iflas vb.) derin iz bırakan bir olay var mı?", ["Evet", "Hayır", "Bilmiyorum"])
-    tikaniklik = st.selectbox("Tıkanıklık alanı", ["İlişkiler", "Para & Bereket", "Kariyer", "Özgüven & Özdeğer", "Sağlık & Enerji"])
+    tikaniklik = st.selectbox("Şifalanmasını ve açılmasını istediğiniz yaşam alanı:", ["İlişkiler", "Para & Bereket", "Kariyer", "Özgüven & Özdeğer", "Sağlık & Enerji"])
     
     submit = st.form_submit_button("Dizimi Başlat")
 
