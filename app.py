@@ -172,18 +172,20 @@ if submit:
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- 🟢 WHATSAPP PAYLAŞIM BUTONU ---
-                share_text = f"Serap Hano Akademi'de Köklerin Gizemi analizimi yaptım! Ruhumun bugünkü tılsımı: {tikaniklik}. Sen de denemelisin: https://seraphano-analiz.streamlit.app"
-                # Linkteki boşlukları ve karakterleri internet diline çeviriyoruz
+# --- 📱 SOSYAL MEDYA PAYLAŞIM ALANI ---
                 import urllib.parse
-                safe_string = urllib.parse.quote(share_text)
-                whatsapp_url = f"https://api.whatsapp.com/send?text={safe_string}"
+                share_text = f"Serap Hano Akademi'de Köklerin Gizemi analizimi yaptım! ✨ Sen de denemelisin: https://seraphano-analiz.streamlit.app"
+                safe_text = urllib.parse.quote(share_text)
+                
+                # Paylaşım Linkleri
+                wa_url = f"https://api.whatsapp.com/send?text={safe_text}"
+                fb_url = f"https://www.facebook.com/sharer/sharer.php?u=https://seraphano-analiz.streamlit.app"
                 
                 st.markdown(f"""
-                    <div style='text-align: center;'>
-                        <a href="{whatsapp_url}" target="_blank" style="background-color: #25D366; color: white; padding: 12px 25px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                            🌿 Analizini WhatsApp'ta Paylaş
-                        </a>
+                    <div style='display: flex; justify-content: center; gap: 10px; margin-top: 20px;'>
+                        <a href="{wa_url}" target="_blank" style="background-color: #25D366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: bold;">WhatsApp</a>
+                        <a href="{fb_url}" target="_blank" style="background-color: #1877F2; color: white; padding: 10px 15px; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: bold;">Facebook</a>
+                        <button onclick="navigator.clipboard.writeText('https://seraphano-analiz.streamlit.app'); alert('Link kopyalandı! Instagram hikayende paylaşabilirsin ✨');" style="background-color: #E1306C; color: white; padding: 10px 15px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer;">Instagram (Linki Kopyala)</button>
                     </div>
                 """, unsafe_allow_html=True)
 
