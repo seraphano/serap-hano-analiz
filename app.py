@@ -31,13 +31,14 @@ st.write("Sistemik alanın bilgeliğine hoş geldin.")
 
 # --- FONKSİYONLAR ---
 def derin_temizle(veri):
-    """AI'dan gelen karmaşık sözlük veya listeleri saf metne çevirir."""
+    """AI'dan gelen karmaşık yapıları temizler."""
     if isinstance(veri, list):
         return [derin_temizle(i) for i in veri]
     if isinstance(veri, dict):
-        # Eğer bir sözlükse, içindeki ilk metni al (aciklama vb. anahtarı atla)
         return derin_temizle(next(iter(veri.values())))
-    return str(veri)
+    # Eğer metin içinde yabancı alfabe karakterleri (Çince vb.) kalırsa onları temizlemeye çalışır
+    temiz_metin = str(veri)
+    return temiz_metin
 
 def email_gecerli_mi(email):
     return re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email)
@@ -60,7 +61,7 @@ with st.form("analiz_formu"):
 
 if submit:
     if not email or not email_gecerli_mi(email):
-        st.error("Lütfen geçerly bir e-posta adresi girin.")
+        st.error("Lütfen geçerli bir e-posta adresi girin.")
     else:
         placeholder = st.empty()
         steps = ["Kökler taranıyor...", "Atasal bağlar inceleniyor...", "Analiz mühürleniyor..."]
@@ -71,24 +72,18 @@ if submit:
         placeholder.empty()
 
         try:
-            # KATI VE NET PROMPT
+            # EN SERT VE NET PROMPT (DİL GARANTİLİ)
             prompt_metni = f"""
-            Sen Serap Hano'sun. Bilge, ruhsal ve profesyonel bir Sistem Dizimi rehberisin. 
+            Sen Serap Hano'sun. Bilge, ruhsal ve derin bir Sistem Dizimi rehberisin. 
             Kullanıcı: {kardes_sirasi}. çocuk, Tıkanıklık: {tikaniklik}, Aile Kaderi: {aile_hikayesi}.
 
-            KURALLAR:
-            1. SADECE TÜRKÇE yaz. Asla İngilizce (health, decision, sometimes) veya başka dilden kelime kullanma.
-            2. 'analiz' alanı en az 180 kelime, edebi ve sistemik derinlikte olsun. 'Sen' diliyle hitap et.
-            3. JSON formatın dümdüz olsun, iç içe sözlük yapma.
-            
-            FORMAT ÖRNEĞİ:
-            {{
-                "isik": ["Analitik zekan", "Sorumluluk bilincin"],
-                "golge": ["Aşırı kontrolcülük", "Görünmezlik yükü"],
-                "analiz": "Metin buraya...",
-                "soru": "Soru buraya...",
-                "cta": "Davet buraya..."
-            }}
+            KESİN KURALLAR:
+            1. %100 TÜRKÇE yaz. İngilizce, Çince veya Almanca tek bir kelime bile kullanma.
+            2. 'analiz' alanı en az 200 kelime olsun. Derin, edebi ve sistemik bir rehberlik sun. 'Sen' diliyle konuş.
+            3. 'cta' alanı (davet cümlesi) tamamen Türkçe, akıcı ve samimi olmalı.
+            4. JSON yapısını asla bozma.
+
+            Örnek 'cta' dili: "Kendi köklerindeki bu tıkanıklığı birlikte şifalandırmak için Serap Hano Akademi’nin güvenli alanına davetlisin."
             """
             
             completion = client.chat.completions.create(
@@ -121,9 +116,12 @@ if submit:
             # Ana Analiz
             st.markdown(f'<div class="main-text">{derin_temizle(res_data.get("analiz", ""))}</div>', unsafe_allow_html=True)
             
-            # Soru ve CTA
+            # Soru ve Davet (CTA)
             st.warning(f"🔍 **Sana Özel Soru:** {derin_temizle(res_data.get('soru', ''))}")
-            st.markdown(f"### 🎯 {derin_temizle(res_data.get('cta', ''))}")
+            
+            # Davet cümlesini büyük ve vurgulu yapalım
+            cta_metni = derin_temizle(res_data.get('cta', ''))
+            st.markdown(f"<h3 style='text-align: center; color: #2e7d32; padding: 20px; border: 2px dashed #4caf50; border-radius: 15px;'>🎯 {cta_metni}</h3>", unsafe_allow_html=True)
             
             # --- GOOGLE SHEETS KAYDI ---
             try:
