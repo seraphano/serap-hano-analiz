@@ -19,8 +19,8 @@ st.set_page_config(page_title="Serap Hano Akademi | Analiz Rehberi", layout="cen
 st.markdown("""
     <style>
     .stApp { background-color: #fdfcfb; }
-    .success-box { background-color: #e8f5e9; padding: 20px; border-radius: 15px; border-left: 8px solid #4caf50; margin-bottom: 15px; color: #2e7d32; font-weight: bold; }
-    .error-box { background-color: #fff3e0; padding: 20px; border-radius: 15px; border-left: 8px solid #ff9800; margin-bottom: 15px; color: #e65100; font-weight: bold; }
+    .success-box { background-color: #e8f5e9; padding: 20px; border-radius: 15px; border-left: 8px solid #4caf50; margin-bottom: 15px; color: #2e7d32; font-size: 15px; }
+    .error-box { background-color: #fff3e0; padding: 20px; border-radius: 15px; border-left: 8px solid #ff9800; margin-bottom: 15px; color: #e65100; font-size: 15px; }
     .main-text { font-size: 18px; line-height: 1.9; color: #333; background: #fff; padding: 25px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 20px; white-space: pre-wrap; }
     .systemic-note { font-size: 14px; color: #666; font-style: italic; text-align: center; margin-top: 30px; padding: 15px; border-top: 1px solid #eee; }
     </style>
@@ -29,9 +29,15 @@ st.markdown("""
 st.title("✨ Köklerin Gizemi")
 st.write("Sistemik alanın bilgeliğine hoş geldin.")
 
-aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
-gunler = list(range(1, 32))
-yillar = list(range(2026, 1919, -1))
+# --- FONKSİYONLAR ---
+def derin_temizle(veri):
+    """AI'dan gelen karmaşık sözlük veya listeleri saf metne çevirir."""
+    if isinstance(veri, list):
+        return [derin_temizle(i) for i in veri]
+    if isinstance(veri, dict):
+        # Eğer bir sözlükse, içindeki ilk metni al (aciklama vb. anahtarı atla)
+        return derin_temizle(next(iter(veri.values())))
+    return str(veri)
 
 def email_gecerli_mi(email):
     return re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email)
@@ -42,19 +48,19 @@ with st.form("analiz_formu"):
     email = st.text_input("E-posta adresiniz:", placeholder="ornek@mail.com")
     
     col_g, col_a, col_y = st.columns(3)
-    with col_g: gun = st.selectbox("Doğum Günü", gunler)
-    with col_a: ay = st.selectbox("Ay", aylar)
-    with col_y: yil = st.selectbox("Yıl", yillar, index=36)
+    with col_g: gun = st.selectbox("Gün", list(range(1, 32)))
+    with col_a: ay = st.selectbox("Ay", ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"])
+    with col_y: yil = st.selectbox("Yıl", list(range(2026, 1920, -1)), index=36)
     
-    kardes_sirasi = st.number_input("Kaçıncı çocuksunuz?", min_value=1, step=1)
-    aile_hikayesi = st.selectbox("Ağır bir aile kaderi var mı?", ["Evet", "Hayır", "Bilmiyorum"])
+    kardes_sirasi = st.number_input("Annenizin kaçıncı çocuğusunuz?", min_value=1, step=1)
+    aile_hikayesi = st.selectbox("Ağır bir kader var mı?", ["Evet", "Hayır", "Bilmiyorum"])
     tikaniklik = st.selectbox("Tıkanıklık alanı", ["İlişkiler", "Para & Bereket", "Kariyer", "Özgüven & Özdeğer", "Sağlık & Enerji"])
     
     submit = st.form_submit_button("Dizimi Başlat")
 
 if submit:
     if not email or not email_gecerli_mi(email):
-        st.error("Lütfen geçerli bir e-posta adresi girin.")
+        st.error("Lütfen geçerly bir e-posta adresi girin.")
     else:
         placeholder = st.empty()
         steps = ["Kökler taranıyor...", "Atasal bağlar inceleniyor...", "Analiz mühürleniyor..."]
@@ -65,23 +71,23 @@ if submit:
         placeholder.empty()
 
         try:
-            # GÜÇLENDİRİLMİŞ PROMPT
+            # KATI VE NET PROMPT
             prompt_metni = f"""
-            Sen Serap Hano'sun. Bilge, sıcak ve profesyonel bir Sistem Dizimi rehberisin. 
+            Sen Serap Hano'sun. Bilge, ruhsal ve profesyonel bir Sistem Dizimi rehberisin. 
             Kullanıcı: {kardes_sirasi}. çocuk, Tıkanıklık: {tikaniklik}, Aile Kaderi: {aile_hikayesi}.
+
+            KURALLAR:
+            1. SADECE TÜRKÇE yaz. Asla İngilizce (health, decision, sometimes) veya başka dilden kelime kullanma.
+            2. 'analiz' alanı en az 180 kelime, edebi ve sistemik derinlikte olsun. 'Sen' diliyle hitap et.
+            3. JSON formatın dümdüz olsun, iç içe sözlük yapma.
             
-            GÖREVİN:
-            1. 'analiz' alanına en az 150 kelimelik, derin, sistemik bir yorum yaz. 'Sen' dilini kullan.
-            2. 'isik' ve 'golge' alanlarına doğrudan metni yaz (asla iç içe sözlük yapma).
-            3. Dil tamamen doğal Türkçe olsun. 'Kariyer decisions' gibi karma kelimeler kullanma.
-            
-            JSON FORMATI (SADECE BU ANAHTARLARI KULLAN):
+            FORMAT ÖRNEĞİ:
             {{
-                "isik": ["Buraya birinci ışık özellik", "Buraya ikinci ışık özellik"],
-                "golge": ["Buraya birinci gölge özellik", "Buraya ikinci gölge özellik"],
-                "analiz": "Buraya uzun ve derin analiz metni...",
-                "soru": "Sistemi sarsacak o can alıcı soru...",
-                "cta": "Serap Hano Akademi'ye özel bir davet cümlesi..."
+                "isik": ["Analitik zekan", "Sorumluluk bilincin"],
+                "golge": ["Aşırı kontrolcülük", "Görünmezlik yükü"],
+                "analiz": "Metin buraya...",
+                "soru": "Soru buraya...",
+                "cta": "Davet buraya..."
             }}
             """
             
@@ -91,14 +97,7 @@ if submit:
                 response_format={"type": "json_object"}
             )
             
-            raw_data = json.loads(completion.choices[0].message.content)
-
-            # --- VERİ TEMİZLEME MANTIĞI ---
-            def temizle(anahtar, varsayilan=""):
-                val = raw_data.get(anahtar, varsayilan)
-                if isinstance(val, dict): # Eğer hala sözlük gelirse içindeki metni çek
-                    return next(iter(val.values()), str(val))
-                return val
+            res_data = json.loads(completion.choices[0].message.content)
 
             # --- SONUÇLARI GÖSTER ---
             st.markdown("---")
@@ -107,23 +106,26 @@ if submit:
             c1, c2 = st.columns(2)
             with c1:
                 st.write("🌿 **Işık Tarafın**")
-                isiklar = raw_data.get('isik', [])
+                isiklar = res_data.get('isik', [])
                 if isinstance(isiklar, str): isiklar = [isiklar]
                 for i in isiklar:
-                    st.markdown(f'<div class="success-box">{temizle("isik", i) if isinstance(i, dict) else i}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="success-box">{derin_temizle(i)}</div>', unsafe_allow_html=True)
             
             with c2:
                 st.write("🟠 **Gölge Tarafın**")
-                golgeler = raw_data.get('golge', [])
+                golgeler = res_data.get('golge', [])
                 if isinstance(golgeler, str): golgeler = [golgeler]
                 for g in golgeler:
-                    st.markdown(f'<div class="error-box">{temizle("golge", g) if isinstance(g, dict) else g}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="error-box">{derin_temizle(g)}</div>', unsafe_allow_html=True)
 
-            st.markdown(f'<div class="main-text">{temizle("analiz")}</div>', unsafe_allow_html=True)
-            st.warning(f"🔍 **Sana Özel Soru:** {temizle('soru')}")
-            st.markdown(f"### 🎯 {temizle('cta')}")
+            # Ana Analiz
+            st.markdown(f'<div class="main-text">{derin_temizle(res_data.get("analiz", ""))}</div>', unsafe_allow_html=True)
             
-            # --- TABLOYA GÖNDER ---
+            # Soru ve CTA
+            st.warning(f"🔍 **Sana Özel Soru:** {derin_temizle(res_data.get('soru', ''))}")
+            st.markdown(f"### 🎯 {derin_temizle(res_data.get('cta', ''))}")
+            
+            # --- GOOGLE SHEETS KAYDI ---
             try:
                 requests.post(SCRIPT_URL, json={
                     "email": email, "dogum": f"{gun} {ay} {yil}", 
