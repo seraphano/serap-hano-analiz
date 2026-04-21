@@ -3,19 +3,18 @@ from groq import Groq
 import json
 import datetime
 
-# --- BAĞLANTI ---
-# Kendi Groq API anahtarını buraya tırnaklar içine yaz
-API_KEY = "BURAYA_GROQ_API_ANAHTARINI_YAZ"
+# --- BAĞLANTI AYARLARI ---
+# Not ettiğin API anahtarını buraya tırnakların içine yapıştır
+API_KEY = "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"
 
 try:
     client = Groq(api_key=API_KEY)
 except Exception as e:
     st.error(f"Bağlantı hatası: {e}")
 
-# --- SAYFA AYARLARI ---
+# --- SAYFA AYARLARI VE TASARIM ---
 st.set_page_config(page_title="Serap Hano - Köklerin Gizemi", layout="centered")
 
-# Görsel Stil (Görsellerdeki gibi temiz ve premium görünüm)
 st.markdown("""
     <style>
     .stApp { background-color: #fdfcfb; }
@@ -32,12 +31,13 @@ st.markdown("### Ruhsal ve Sistemik Analiz Rehberi")
 with st.form("analiz_formu"):
     st.write("Bilgilerinizi girerek köklerinizdeki gizemi aralayın.")
     
+    # Tarih formatını ve sınırlarını ayarladık
     dogum_tarihi = st.date_input(
         "Doğum Tarihiniz (Gün/Ay/Yıl)",
         min_value=datetime.date(1920, 1, 1),
         max_value=datetime.date.today(),
         value=datetime.date(1990, 1, 1),
-        format="DD/MM/YYYY" # Tarih formatını Türkiye standardına çektik
+        format="DD/MM/YYYY" 
     )
     
     kardes_sirasi = st.number_input("Annenizin kaçıncı çocuğusunuz? (Düşük/Kürtaj dahil)", min_value=1, step=1)
@@ -50,7 +50,7 @@ with st.form("analiz_formu"):
 if submit:
     with st.spinner("Sistemik alan taranıyor, köklerinize bağlanılıyor..."):
         try:
-            # GİZEMSEL VE SATIŞ ODAKLI PROMPT
+            # GİZEMSEL VE DERİN PROMPT
             prompt_metni = f"""
             Sen bir uzman Sistem Dizimi ve Doğum Dizimi rehberisin. 
             Kullanıcı Bilgileri: 
@@ -60,17 +60,17 @@ if submit:
             Tıkanıklık: {tikaniklik}
 
             Bu verilere dayanarak, sarsıcı, derin ve gizemli bir analiz yap. 
-            Cevabı SADECE şu JSON yapısında ver:
+            Cevabı SADECE şu JSON yapısında ver (başka açıklama ekleme):
             {{
-                "isik": ["Güç 1", "Güç 2"],
-                "golge": ["Gölge 1", "Gölge 2"],
+                "isik": ["Güç Etiketi 1", "Güç Etiketi 2"],
+                "golge": ["Gölge Etiketi 1", "Gölge Etiketi 2"],
                 "analiz": "Derin ve sarsıcı analiz paragrafı (Kullanıcıya 'sen' diye hitap et).",
-                "soru": "Ebeveynlerine sorman gereken gizemli soru.",
-                "cta": "Serap Hano Akademi'ye yönlendiren etkileyici bir cümle."
+                "soru": "Ebeveynlerine sorman gereken gizemli ve derin bir soru.",
+                "cta": "Serap Hano Akademi'den seans veya eğitim almaya teşvik eden etkileyici bir cümle."
             }}
             """
             
-            # YENİ MODEL İSMİ BURADA GÜNCELLENDİ
+            # Yeni güncel model: llama-3.3-70b-versatile
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile", 
                 messages=[{"role": "user", "content": prompt_metni}],
@@ -79,7 +79,7 @@ if submit:
             
             data = json.loads(completion.choices[0].message.content)
 
-            # --- SONUÇLARI GÖSTER ---
+            # --- SONUÇLARIN GÖSTERİLMESİ ---
             st.markdown("---")
             st.subheader("Ruhsal Haritanız")
             
