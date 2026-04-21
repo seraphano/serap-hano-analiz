@@ -63,7 +63,7 @@ with st.form("analiz_formu"):
     with col_y: yil = st.selectbox("Yıl", list(range(2026, 1920, -1)), index=36)
     
     kardes_sirasi = st.number_input("Annenizin kaçıncı çocuğusunuz?", min_value=1, step=1)
-    aile_hikayesi = st.selectbox("Ağır bir kader var mı?", ["Evet", "Hayır", "Bilmiyorum"])
+    aile_hikayesi = st.selectbox("Aile geçmişinizde (göç, erken kayıp, iflas vb.) derin iz bırakan bir olay var mı?", ["Evet", "Hayır", "Bilmiyorum"])
     tikaniklik = st.selectbox("Tıkanıklık alanı", ["İlişkiler", "Para & Bereket", "Kariyer", "Özgüven & Özdeğer", "Sağlık & Enerji"])
     
     submit = st.form_submit_button("Dizimi Başlat")
