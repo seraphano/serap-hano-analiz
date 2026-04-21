@@ -150,7 +150,29 @@ if submit:
                 }, timeout=10)
             except Exception as e:
                 print(f"Google Kayıt Hatası: {e}")
-
+# --- 🃏 RUH KARTI EŞLEŞTİRME ---
+            # Burada senin verdiğin WP linklerini kategorilerle mühürlüyoruz
+            tilsim_kartlari = {
+                "Sağlık & Enerji": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-saglik.webp",
+                "Özgüven & Özdeğer": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-ozguven-ozdeger.webp",
+                "Kariyer": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-kariyer.webp",
+                "Para & Bereket": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-para-bereket.webp",
+                "İlişkiler": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-iliskiler.webp"
+            }
+            
+            # --- ✨ EKRAN TASARIMI ---
+            st.markdown("---")
+            st.markdown("<h2 style='text-align: center; color: #2e7d32;'>✨ Ruhunun Bugünkü Tılsımı</h2>", unsafe_allow_html=True)
+            
+            # Seçilen alana göre doğru kartı ekrana basıyoruz
+            if tikaniklik in tilsim_kartlari:
+                st.image(tilsim_kartlari[tikaniklik], use_container_width=True)
+                st.markdown(f"""
+                    <div style='text-align: center; padding: 15px; background-color: #f1f8e9; border-radius: 10px; color: #2e7d32; font-weight: bold;'>
+                        Bu kart, {tikaniklik} alanındaki dönüşümün için sana rehberlik edecek sembolleri taşıyor. 
+                        Üzerine basılı tutarak telefonuna kaydedebilirsin.
+                    </div>
+                """, unsafe_allow_html=True)
             st.balloons()
 
         except Exception as e:
