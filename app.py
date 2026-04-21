@@ -135,13 +135,21 @@ if submit:
             cta_text = veriyi_al(res_data, 'cta')
             st.markdown(f"<h3 style='text-align: center; color: #2e7d32; padding: 25px; border: 2px dashed #4caf50; border-radius: 15px; background: #f1f8e9;'>🎯 {cta_text}</h3>", unsafe_allow_html=True)
             
-            # --- KAYIT ---
+          # --- KAYIT VE E-POSTA GÖNDERİMİ ---
             try:
+                analiz_metni = veriyi_al(res_data, "analiz")
+                soru_metni = veriyi_al(res_data, 'soru')
+                
                 requests.post(SCRIPT_URL, json={
-                    "email": email, "dogum": f"{gun} {ay} {yil}", 
-                    "sira": str(kardes_sirasi), "tikaniklik": tikaniklik
-                }, timeout=5)
-            except: pass
+                    "email": email, 
+                    "dogum": f"{gun} {ay} {yil}", 
+                    "sira": str(kardes_sirasi), 
+                    "tikaniklik": tikaniklik,
+                    "analiz": analiz_metni,
+                    "soru": soru_metni
+                }, timeout=10)
+            except Exception as e:
+                print(f"Google Kayıt Hatası: {e}")
 
             st.balloons()
 
