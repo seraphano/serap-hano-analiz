@@ -1,89 +1,104 @@
 import streamlit as st
 from groq import Groq
 import json
-import datetime # Tarih ayarları için bu eklendi
+import datetime
 
 # --- BAĞLANTI ---
-API_KEY = "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"
+# Kendi Groq API anahtarını buraya tırnaklar içine yaz
+API_KEY = "BURAYA_GROQ_API_ANAHTARINI_YAZ"
 
 try:
     client = Groq(api_key=API_KEY)
-except:
-    st.error("API Anahtarı bulunamadı.")
+except Exception as e:
+    st.error(f"Bağlantı hatası: {e}")
 
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="Serap Hano - Köklerin Gizemi", layout="centered")
 
+# Görsel Stil (Görsellerdeki gibi temiz ve premium görünüm)
 st.markdown("""
     <style>
     .stApp { background-color: #fdfcfb; }
     .success-box { background-color: #e8f5e9; padding: 20px; border-radius: 15px; border-left: 8px solid #4caf50; margin-bottom: 15px; color: #2e7d32; font-weight: bold; }
     .error-box { background-color: #fff3e0; padding: 20px; border-radius: 15px; border-left: 8px solid #ff9800; margin-bottom: 15px; color: #e65100; font-weight: bold; }
-    .main-text { font-size: 18px; line-height: 1.6; color: #333; font-style: italic; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .main-text { font-size: 18px; line-height: 1.7; color: #333; font-style: italic; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("✨ Köklerin Gizemi")
-st.write("Lütfen bilgileri eksiksiz doldurun.")
+st.markdown("### Ruhsal ve Sistemik Analiz Rehberi")
 
-# --- FORM ---
+# --- GİRİŞ FORMU ---
 with st.form("analiz_formu"):
-    # TAKVİM AYARI BURADA DÜZELTİLDİ:
+    st.write("Bilgilerinizi girerek köklerinizdeki gizemi aralayın.")
+    
     dogum_tarihi = st.date_input(
-        "Doğum Tarihiniz",
-        min_value=datetime.date(1920, 1, 1), # En eski 1920
-        max_value=datetime.date.today(),      # En yeni bugün
-        value=datetime.date(1990, 1, 1)      # Başlangıçta 1990 görünsün
+        "Doğum Tarihiniz (Gün/Ay/Yıl)",
+        min_value=datetime.date(1920, 1, 1),
+        max_value=datetime.date.today(),
+        value=datetime.date(1990, 1, 1),
+        format="DD/MM/YYYY" # Tarih formatını Türkiye standardına çektik
     )
     
-    kardes_sirasi = st.number_input("Annenizin kaçıncı çocuğusunuz? (Kayıplar dahil)", min_value=1, step=1)
-    aile_hikayesi = st.selectbox("Ailenizde ağır bir kader öyküsü var mı?", ["Evet", "Hayır", "Bilmiyorum"])
-    tikaniklik = st.selectbox("Hangi alanda düğüm hissediyorsunuz?", ["İlişkiler", "Bereket & Para", "Kariyer", "Sağlık"])
+    kardes_sirasi = st.number_input("Annenizin kaçıncı çocuğusunuz? (Düşük/Kürtaj dahil)", min_value=1, step=1)
+    aile_hikayesi = st.selectbox("Ailenizde göç, erken kayıp veya ağır bir kader var mı?", ["Evet", "Hayır", "Bilmiyorum"])
+    tikaniklik = st.selectbox("Şu an en çok hangi alanda tıkanıklık hissediyorsunuz?", ["İlişkiler", "Bereket & Para", "Kariyer", "Ruhsal Yorgunluk"])
     
-    submit = st.form_submit_button("Sanal Dizimi Başlat")
+    submit = st.form_submit_button("Analizi Başlat")
 
 # --- ANALİZ MANTIĞI ---
 if submit:
-    with st.spinner("Sistemik kayıtlar taranıyor..."):
+    with st.spinner("Sistemik alan taranıyor, köklerinize bağlanılıyor..."):
         try:
-            prompt_metni = f"Doğum: {dogum_tarihi}, Sıra: {kardes_sirasi}, Aile: {aile_hikayesi}, Tıkanıklık: {tikaniklik} verilerine göre derin bir aile dizimi analizi yap."
-            
-            # JSON formatında sarsıcı bir cevap istiyoruz
-            prompt_talimati = f"""
-            {prompt_metni}
+            # GİZEMSEL VE SATIŞ ODAKLI PROMPT
+            prompt_metni = f"""
+            Sen bir uzman Sistem Dizimi ve Doğum Dizimi rehberisin. 
+            Kullanıcı Bilgileri: 
+            Doğum Tarihi: {dogum_tarihi.strftime('%d/%m/%Y')}
+            Kardeş Sırası: {kardes_sirasi}
+            Aile Hikayesi: {aile_hikayesi}
+            Tıkanıklık: {tikaniklik}
+
+            Bu verilere dayanarak, sarsıcı, derin ve gizemli bir analiz yap. 
             Cevabı SADECE şu JSON yapısında ver:
             {{
-                "isik": ["Güç1", "Güç2"],
-                "golge": ["Gölge1", "Gölge2"],
-                "analiz": "Derin paragraf",
-                "soru": "Soru",
-                "cta": "Eğitime davet cümlesi"
+                "isik": ["Güç 1", "Güç 2"],
+                "golge": ["Gölge 1", "Gölge 2"],
+                "analiz": "Derin ve sarsıcı analiz paragrafı (Kullanıcıya 'sen' diye hitap et).",
+                "soru": "Ebeveynlerine sorman gereken gizemli soru.",
+                "cta": "Serap Hano Akademi'ye yönlendiren etkileyici bir cümle."
             }}
             """
             
+            # YENİ MODEL İSMİ BURADA GÜNCELLENDİ
             completion = client.chat.completions.create(
-                model="llama3-8b-8192",
-                messages=[{"role": "user", "content": prompt_talimati}],
+                model="llama-3.3-70b-versatile", 
+                messages=[{"role": "user", "content": prompt_metni}],
                 response_format={"type": "json_object"}
             )
             
             data = json.loads(completion.choices[0].message.content)
 
+            # --- SONUÇLARI GÖSTER ---
             st.markdown("---")
-            c1, c2 = st.columns(2)
-            with c1:
-                st.write("🌿 **Işık Tarafın**")
-                for i in data['isik']:
+            st.subheader("Ruhsal Haritanız")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("🌿 **Işık Tarafın**")
+                for i in data.get('isik', []):
                     st.markdown(f'<div class="success-box">{i}</div>', unsafe_allow_html=True)
-            with c2:
-                st.write("🟠 **Gölge Tarafın**")
-                for g in data['golge']:
+            with col2:
+                st.markdown("🟠 **Gölge Tarafın**")
+                for g in data.get('golge', []):
                     st.markdown(f'<div class="error-box">{g}</div>', unsafe_allow_html=True)
 
-            st.markdown(f'<div class="main-text">{data["analiz"]}</div>', unsafe_allow_html=True)
-            st.warning(f"**Atalarına Sor:** {data['soru']}")
-            st.markdown(f"### 🎯 {data['cta']}")
+            st.markdown(f'<div class="main-text">{data.get("analiz", "")}</div>', unsafe_allow_html=True)
+            
+            st.warning(f"🔍 **Atalarına Sor:** {data.get('soru', '')}")
+            
+            st.markdown(f"### 🎯 {data.get('cta', '')}")
             st.balloons()
 
         except Exception as e:
-            st.error(f"Bir hata oluştu: {e}")
+            st.error(f"Sistem bir düğüme rastladı: {e}")
