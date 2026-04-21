@@ -128,4 +128,4 @@ if submit:
             st.balloons()
 
         except Exception as e:
-            st.error("Şu an sisteme yoğun bir talep var, lütfen tekrar deneyin.")
+    st.error(f"Teknik bir düğüm oluştu: {e}")
