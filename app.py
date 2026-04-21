@@ -135,22 +135,7 @@ if submit:
             cta_text = veriyi_al(res_data, 'cta')
             st.markdown(f"<h3 style='text-align: center; color: #2e7d32; padding: 25px; border: 2px dashed #4caf50; border-radius: 15px; background: #f1f8e9;'>🎯 {cta_text}</h3>", unsafe_allow_html=True)
             
-          # --- KAYIT VE E-POSTA GÖNDERİMİ ---
-            try:
-                analiz_metni = veriyi_al(res_data, "analiz")
-                soru_metni = veriyi_al(res_data, 'soru')
-                
-                requests.post(SCRIPT_URL, json={
-                    "email": email, 
-                    "dogum": f"{gun} {ay} {yil}", 
-                    "sira": str(kardes_sirasi), 
-                    "tikaniklik": tikaniklik,
-                    "analiz": analiz_metni,
-                    "soru": soru_metni
-                }, timeout=10)
-            except Exception as e:
-                print(f"Google Kayıt Hatası: {e}")
-# --- 🃏 RUH KARTI EŞLEŞTİRME ---
+# --- 🃏 RUH KARTI VE PAYLAŞIM ALANI ---
             tilsim_kartlari = {
                 "Sağlık & Enerji": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-saglik.webp",
                 "Özgüven & Özdeğer": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-ozguven-ozdeger.webp",
@@ -159,37 +144,49 @@ if submit:
                 "İlişkiler": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-iliskiler.webp"
             }
             
-            # --- ✨ EKRAN TASARIMI ---
             st.markdown("---")
             st.markdown("<h2 style='text-align: center; color: #2e7d32;'>✨ Ruhunun Bugünkü Tılsımı</h2>", unsafe_allow_html=True)
             
             if tikaniklik in tilsim_kartlari:
                 st.image(tilsim_kartlari[tikaniklik], use_container_width=True)
                 st.markdown(f"""
-                    <div style='text-align: center; padding: 15px; background-color: #f1f8e9; border-radius: 10px; color: #2e7d32; font-weight: bold; margin-bottom: 20px;'>
-                        Bu kart, {tikaniklik} alanındaki dönüşümün için sana rehberlik edecek sembolleri taşıyor. 
-                        Üzerine basılı tutarak telefonuna kaydedebilirsin.
+                    <div style='text-align: center; padding: 15px; background-color: #f1f8e9; border-radius: 10px; color: #2e7d32; font-weight: bold;'>
+                        Bu kart, {tikaniklik} alanındaki dönüşümün için sana rehberlik edecek sembolleri taşıyor.
                     </div>
                 """, unsafe_allow_html=True)
 
-# --- 📱 SOSYAL MEDYA PAYLAŞIM ALANI ---
+                # --- 📱 SOSYAL MEDYA BUTONLARI ---
                 import urllib.parse
                 share_text = f"Serap Hano Akademi'de Köklerin Gizemi analizimi yaptım! ✨ Sen de denemelisin: https://seraphano-analiz.streamlit.app"
                 safe_text = urllib.parse.quote(share_text)
                 
-                # Paylaşım Linkleri
                 wa_url = f"https://api.whatsapp.com/send?text={safe_text}"
                 fb_url = f"https://www.facebook.com/sharer/sharer.php?u=https://seraphano-analiz.streamlit.app"
                 
                 st.markdown(f"""
-                    <div style='display: flex; justify-content: center; gap: 10px; margin-top: 20px;'>
+                    <div style='display: flex; justify-content: center; gap: 10px; margin: 20px 0;'>
                         <a href="{wa_url}" target="_blank" style="background-color: #25D366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: bold;">WhatsApp</a>
                         <a href="{fb_url}" target="_blank" style="background-color: #1877F2; color: white; padding: 10px 15px; text-decoration: none; border-radius: 10px; font-size: 14px; font-weight: bold;">Facebook</a>
-                        <button onclick="navigator.clipboard.writeText('https://seraphano-analiz.streamlit.app'); alert('Link kopyalandı! Instagram hikayende paylaşabilirsin ✨');" style="background-color: #E1306C; color: white; padding: 10px 15px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer;">Instagram (Linki Kopyala)</button>
+                        <button onclick="navigator.clipboard.writeText('https://seraphano-analiz.streamlit.app'); alert('Link kopyalandı! Instagram hikayende paylaşabilirsin ✨');" style="background-color: #E1306C; color: white; padding: 10px 15px; border: none; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer;">Instagram (Link)</button>
                     </div>
                 """, unsafe_allow_html=True)
 
+            # --- 🎈 ÖNCE BALONLAR (HIZLI ÇALIŞIR) ---
             st.balloons()
 
+            # --- 💾 SONRA ARKA PLAN KAYDI (SESSİZCE ÇALIŞIR) ---
+            try:
+                analiz_metni = veriyi_al(res_data, "analiz")
+                soru_metni = veriyi_al(res_data, 'soru')
+                requests.post(SCRIPT_URL, json={
+                    "email": email, 
+                    "dogum": f"{gun} {ay} {yil}", 
+                    "sira": str(kardes_sirasi), 
+                    "tikaniklik": tikaniklik,
+                    "analiz": analiz_metni,
+                    "soru": soru_metni
+                }, timeout=10)
+            except:
+                pass
         except Exception as e:
             st.error(f"Enerji alanında bir karışıklık oldu: {e}")
