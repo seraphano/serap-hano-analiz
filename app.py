@@ -3,13 +3,15 @@ from groq import Groq
 import json
 import time
 import re
+import requests
 
 # --- BAĞLANTI ---
 try:
     API_KEY = st.secrets["GROQ_API_KEY"]
+    SCRIPT_URL = st.secrets["GOOGLE_SCRIPT_URL"]
     client = Groq(api_key=API_KEY)
-except Exception:
-    st.error("Sistem bağlantısında bir aksama var.")
+except Exception as e:
+    st.error(f"Kasa (Secrets) bağlantı hatası: {e}")
 
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="Serap Hano Akademi | Analiz Rehberi", layout="centered")
@@ -27,7 +29,6 @@ st.markdown("""
 st.title("✨ Köklerin Gizemi")
 st.write("Sistemik alanın bilgeliğine hoş geldin.")
 
-# --- TARİH VE E-POSTA KONTROLÜ ---
 aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
 gunler = list(range(1, 32))
 yillar = list(range(2026, 1919, -1))
@@ -55,34 +56,18 @@ if submit:
     if not email or not email_gecerli_mi(email):
         st.error("Lütfen geçerli bir e-posta adresi girin.")
     else:
-        # Animasyonlu Bekleme
+        # Animasyon
         placeholder = st.empty()
         steps = ["Kökler taranıyor...", "Atasal bağlar inceleniyor...", "Analiz Serap Hano rehberliğinde mühürleniyor..."]
         for step in steps:
             with placeholder.container():
                 st.info(step)
-                time.sleep(3)
+                time.sleep(2)
         placeholder.empty()
 
         try:
-            # PROMPT: DİL VE FORMAT KESİNLİĞİ
-            prompt_metni = f"""
-            Sen Serap Hano'sun. Uzman bir Sistem Dizimi rehberi olarak karşındaki kişiye doğrudan "SEN" diye hitap et. 
-            Kullanıcı: {kardes_sirasi}. çocuk, Tıkanıklık: {tikaniklik}, Aile Kaderi: {aile_hikayesi}.
-
-            KURALLAR:
-            1. ASLA İngilizce, Rusça veya başka dil kullanma. SADECE TÜRKÇE.
-            2. Doğum tarihini asla tekrar etme. "Senin doğum tarihin..." diye başlama.
-            3. Analiz paragrafı en az 6 cümle, derin ve sistemik olsun.
-            4. JSON yapısı şu şekilde basit olsun (başka anahtar ekleme):
-            {{
-                "isik": ["Madde 1", "Madde 2"],
-                "golge": ["Madde 1", "Madde 2"],
-                "analiz": "Metin buraya",
-                "soru": "Soru buraya",
-                "cta": "Davet buraya"
-            }}
-            """
+            # ANALİZ TALEBİ
+            prompt_metni = f"Sen Serap Hano'sun. Uzman bir Sistem Dizimi rehberi olarak karşındakine 'SEN' diye hitap et. Doğum tarihi verme. {kardes_sirasi}. çocuk, Tıkanıklık: {tikaniklik}, Aile Kaderi: {aile_hikayesi} için derin bir analiz yap. JSON: isik, golge, analiz, soru, cta."
             
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
@@ -92,15 +77,22 @@ if submit:
             
             data = json.loads(completion.choices[0].message.content)
 
-            # --- VERİ ÇEKME (Hata Koruyucu) ---
-            def veriyi_temizle(field):
-                val = data.get(field, "")
-                if isinstance(val, dict): # Eğer AI yanlışlıkla sözlük gönderirse içinden çek
-                    return list(val.values())[0] if isinstance(val.values(), list) else str(val)
-                return val
+            # --- VERİYİ GOOGLE SHEETS'E GÖNDER ---
+            try:
+                payload = {
+                    "email": email,
+                    "dogum": f"{gun} {ay} {yil}",
+                    "sira": str(kardes_sirasi),
+                    "tikaniklik": tikaniklik
+                }
+                requests.post(SCRIPT_URL, json=payload, timeout=5)
+            except Exception as e_sheet:
+                # Veri yazma hatası analizi engellemesin diye sadece loglanır
+                print(f"Tabloya yazma hatası: {e_sheet}")
 
+            # --- SONUÇLAR ---
             st.markdown("---")
-            st.subheader("Ruhsal Haritanız Belirlendi") # Düzeltildi
+            st.subheader("Ruhsal Haritanız Belirlendi")
             
             c1, c2 = st.columns(2)
             with c1:
@@ -109,23 +101,19 @@ if submit:
                 if isinstance(isik, str): isik = [isik]
                 for i in isik: st.markdown(f'<div class="success-box">{i}</div>', unsafe_allow_html=True)
             
-            with col2 if 'col2' in locals() else c2: # Layout koruma
+            with c2:
                 st.write("🟠 **Gölge Tarafın**")
                 golge = data.get('golge', [])
                 if isinstance(golge, str): golge = [golge]
                 for g in golge: st.markdown(f'<div class="error-box">{g}</div>', unsafe_allow_html=True)
 
-            # Analiz Metni
-            analiz_metni = veriyi_temizle('analiz')
-            st.markdown(f'<div class="main-text">{analiz_metni}</div>', unsafe_allow_html=True)
-            
-            # Soru ve Not
-            soru_metni = veriyi_temizle('soru')
-            st.warning(f"🔍 **Sana Özel Soru:** {soru_metni}")
+            st.markdown(f'<div class="main-text">{data.get("analiz", "")}</div>', unsafe_allow_html=True)
+            st.warning(f"🔍 **Sana Özel Soru:** {data.get('soru', '')}")
             
             st.markdown('<div class="systemic-note">"Alan her an değişir. Lütfen sonuçları sindirmek için kendine zaman tanı."</div>', unsafe_allow_html=True)
-            st.markdown(f"### 🎯 {veriyi_temizle('cta')}")
+            st.markdown(f"### 🎯 {data.get('cta', '')}")
             st.balloons()
 
         except Exception as e:
-    st.error(f"Teknik bir düğüm oluştu: {e}")
+            # HATA GÖSTERİMİ DÜZELTİLDİ (GİRİNTİLİ)
+            st.error(f"Teknik bir düğüm oluştu: {e}")
