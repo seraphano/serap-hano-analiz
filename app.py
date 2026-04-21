@@ -29,21 +29,13 @@ st.markdown("""
 st.title("✨ Köklerin Gizemi")
 st.write("Sistemik alanın bilgeliğine hoş geldin.")
 
-# --- DİL MUHAFIZI (Safety Net) ---
+# --- DİL MUHAFIZI ---
 def turkcelestir(metin):
-    """AI'nın kaçırdığı yabancı kelimeleri temizler."""
     sozluk = {
-        "experiences": "deneyimler",
-        "experience": "deneyim",
-        "life": "yaşam",
-        "decision": "karar",
-        "decisions": "kararlar",
-        "sometimes": "bazen",
-        "health": "sağlık",
-        "výběirlerini": "seçimlerini",
-        "výběr": "seçim",
-        "important": "önemli",
-        "factor": "faktör"
+        "experiences": "deneyimler", "experience": "deneyim",
+        "life": "yaşam", "decision": "karar", "decisions": "kararlar",
+        "sometimes": "bazen", "health": "sağlık", "výběirlerini": "seçimlerini",
+        "výběr": "seçim", "important": "önemli", "factor": "faktör"
     }
     for ing, tr in sozluk.items():
         metin = re.sub(rf'\b{ing}\b', tr, metin, flags=re.IGNORECASE)
@@ -88,19 +80,26 @@ if submit:
         placeholder.empty()
 
         try:
-            # SERAP HANO RUHUNA UYGUN PROMPT
+            # KRİTİK: PROMPT İÇİNE 'JSON' KELİMESİ EKLENDİ
             prompt_metni = f"""
-            Sen Serap Hano'sun. Bilge, sıcak, samimi ve profesyonel bir Sistem Dizimi rehberisin. 
-            Kullanıcı: {kardes_sirasi}. çocuk, Tıkanıklık: {tikaniklik}, Aile Kaderi: {aile_hikayesi}.
+            Sen Serap Hano'sun. Bilge ve samimi bir Sistem Dizimi rehberisin. 
+            Kullanıcı Bilgileri: {kardes_sirasi}. çocuk, Tıkanıklık: {tikaniklik}, Aile Kaderi: {aile_hikayesi}.
 
-            TALİMATLAR:
-            1. %100 ÖZ TÜRKÇE yaz. Asla İngilizce veya başka dilden kelime sızmasın.
-            2. "Bir bireyin yaşamını..." gibi akademik ve mesafeli başlama. 
-            3. "Canım", "Ruhun", "Köklerin" gibi kelimeler kullanarak doğrudan kalbe hitap et.
-            4. 'analiz' alanı en az 200 kelime olsun. Derin, edebi ve sistemik olsun.
-            5. 'cta' kısmını kısa, vurucu ve tamamen Türkçe yaz.
-
-            ÖRNEK CTA: "Kendi gücünü eline almak için seni Serap Hano Akademi'nin şifalı alanına bekliyorum."
+            BU ANALİZİ BİR JSON FORMATINDA VERMELİSİN.
+            
+            KURALLAR:
+            1. %100 TÜRKÇE yaz. Asla yabancı kelime kullanma.
+            2. "Bir bireyin yaşamını..." gibi mesafeli başlama. Kalbe hitap et.
+            3. 'analiz' alanı en az 200 kelime olsun. Derin ve edebi olsun.
+            
+            JSON OBJESİ ŞU ANAHTARLARI İÇERMELİDİR:
+            {{
+                "isik": ["Özellik 1", "Özellik 2"],
+                "golge": ["Özellik 1", "Özellik 2"],
+                "analiz": "Derin ruhsal analiz metni...",
+                "soru": "Sana özel o can alıcı soru...",
+                "cta": "Serap Hano Akademi davet cümlesi..."
+            }}
             """
             
             completion = client.chat.completions.create(
@@ -130,13 +129,9 @@ if submit:
                     for g in golgeler: st.markdown(f'<div class="error-box">{g}</div>', unsafe_allow_html=True)
                 else: st.markdown(f'<div class="error-box">{golgeler}</div>', unsafe_allow_html=True)
 
-            # Ana Analiz
             st.markdown(f'<div class="main-text">{veriyi_al(res_data, "analiz")}</div>', unsafe_allow_html=True)
-            
-            # Soru
             st.warning(f"🔍 **Sana Özel Soru:** {veriyi_al(res_data, 'soru')}")
             
-            # CTA
             cta_text = veriyi_al(res_data, 'cta')
             st.markdown(f"<h3 style='text-align: center; color: #2e7d32; padding: 25px; border: 2px dashed #4caf50; border-radius: 15px; background: #f1f8e9;'>🎯 {cta_text}</h3>", unsafe_allow_html=True)
             
