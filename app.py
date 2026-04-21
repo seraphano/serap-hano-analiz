@@ -151,7 +151,6 @@ if submit:
             except Exception as e:
                 print(f"Google Kayıt Hatası: {e}")
 # --- 🃏 RUH KARTI EŞLEŞTİRME ---
-            # Burada senin verdiğin WP linklerini kategorilerle mühürlüyoruz
             tilsim_kartlari = {
                 "Sağlık & Enerji": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-saglik.webp",
                 "Özgüven & Özdeğer": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-ozguven-ozdeger.webp",
@@ -164,15 +163,30 @@ if submit:
             st.markdown("---")
             st.markdown("<h2 style='text-align: center; color: #2e7d32;'>✨ Ruhunun Bugünkü Tılsımı</h2>", unsafe_allow_html=True)
             
-            # Seçilen alana göre doğru kartı ekrana basıyoruz
             if tikaniklik in tilsim_kartlari:
                 st.image(tilsim_kartlari[tikaniklik], use_container_width=True)
                 st.markdown(f"""
-                    <div style='text-align: center; padding: 15px; background-color: #f1f8e9; border-radius: 10px; color: #2e7d32; font-weight: bold;'>
+                    <div style='text-align: center; padding: 15px; background-color: #f1f8e9; border-radius: 10px; color: #2e7d32; font-weight: bold; margin-bottom: 20px;'>
                         Bu kart, {tikaniklik} alanındaki dönüşümün için sana rehberlik edecek sembolleri taşıyor. 
                         Üzerine basılı tutarak telefonuna kaydedebilirsin.
                     </div>
                 """, unsafe_allow_html=True)
+
+                # --- 🟢 WHATSAPP PAYLAŞIM BUTONU ---
+                share_text = f"Serap Hano Akademi'de Köklerin Gizemi analizimi yaptım! Ruhumun bugünkü tılsımı: {tikaniklik}. Sen de denemelisin: https://seraphano-analiz.streamlit.app"
+                # Linkteki boşlukları ve karakterleri internet diline çeviriyoruz
+                import urllib.parse
+                safe_string = urllib.parse.quote(share_text)
+                whatsapp_url = f"https://api.whatsapp.com/send?text={safe_string}"
+                
+                st.markdown(f"""
+                    <div style='text-align: center;'>
+                        <a href="{whatsapp_url}" target="_blank" style="background-color: #25D366; color: white; padding: 12px 25px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                            🌿 Analizini WhatsApp'ta Paylaş
+                        </a>
+                    </div>
+                """, unsafe_allow_html=True)
+
             st.balloons()
 
         except Exception as e:
