@@ -8,7 +8,7 @@ import html
 from datetime import date
 import urllib.parse
 
-# 1. Page Config (En üstte)
+# 1. KRİTİK: Page Config en başta olmalı (5. Madde Çözümü)
 st.set_page_config(page_title="Serap Hano Akademi | Analiz Rehberi", layout="centered")
 
 # --- TASARIM VE GİZLEME ---
@@ -28,15 +28,15 @@ if "GROQ_API_KEY" in st.secrets:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     SCRIPT_URL = st.secrets["GOOGLE_SCRIPT_URL"]
 else:
-    st.error("Sistem ayarları (Secrets) bulunamadı!")
+    st.error("Sistem ayarları (Secrets) eksik!")
 
 st.title("✨ Köklerin Gizemi")
-st.write("Atasal mirasın ve ruhsal tıkanıklıkların kuantum analizi.")
+st.write("Sistemik alanın ve atasal mirasın derin analizi.")
 
 # --- FORM ---
 with st.form("analiz_formu"):
-    st.write("### Ruhsal Kayıtlarınızı Açın")
-    email = st.text_input("E-posta adresiniz:", placeholder="analiziniz sisteme mühürlenecek...")
+    st.write("### Ruhsal ve Atasal Kayıtlarınızı Açın")
+    email = st.text_input("E-posta adresiniz:", placeholder="analiziniz mühürlenecek...")
     
     col_c, col_y = st.columns(2)
     with col_c:
@@ -47,66 +47,68 @@ with st.form("analiz_formu"):
     dogum_saati = st.time_input("Doğum Saatiniz (Yaklaşık)")
 
     st.write("---")
-    kardes_sirasi = st.number_input("Kaçıncı çocuksunuz? (Kayıplar/Düşükler dahil)", min_value=1, step=1)
-    aile_evlilik = st.selectbox("Ebeveynlerinizin evlilik temeli?", ["Severek evlendiler", "Görücü usulü", "Mantık/Zorunlu evlilik", "Bilmiyorum"])
-    dislanan_biri = st.selectbox("Ailede dışlanan veya hakkı yenen biri var mı?", ["Evet, var", "Hayır, yok", "Emin değilim"])
-    agir_yazgi = st.selectbox("Aile geçmişinde ağır bir yazgı (İntihar, göç, iflas, erken ölüm)?", ["Evet, var", "Hayır, yok", "Bazı zorluklar var"])
+    kardes_sirasi = st.number_input("Kaçıncı çocuksunuz? (Düşük/Kayıp dahil)", min_value=1, step=1)
+    aile_evlilik = st.selectbox("EBEVEYNLERİNİZİN evlilik temeli nedir?", ["Severek evlendiler", "Görücü usulü", "Mantık/Zorunlu evlilik", "Bilmiyorum"])
+    dislanan_biri = st.selectbox("AİLENİZDE dışlanmış veya hakkı yenen biri var mı?", ["Evet, var", "Hayır, yok", "Emin değilim"])
+    agir_yazgi = st.selectbox("AİLE GEÇMİŞİNDE ağır yazgı (İntihar, iflas, göç, erken ölüm)?", ["Evet, var", "Hayır, yok", "Bazı zorluklar var"])
     kisisel_travma = st.selectbox("Geçmişinizde derin bir travma/depresyon oldu mu?", ["Evet", "Hayır", "Belirsiz"])
     tikaniklik = st.selectbox("Şifalanmasını istediğiniz alan:", ["İlişkiler", "Para & Bereket", "Kariyer", "Özgüven & Özdeğer", "Sağlık & Enerji"])
     
-    kvkk_onay = st.checkbox("Verilerimin sistemik analiz için işlenmesine onay veriyorum.")
-    submit = st.form_submit_button("Dizimi Başlat")
+    kvkk_onay = st.checkbox("Verilerimin sistemik analiz için işlenmesine ve kaydedilmesine (KVKK) onay veriyorum.")
+    submit = st.form_submit_button("Sistemik Analizi Başlat")
 
 # --- ANALİZ MOTORU ---
 if submit:
     bugun = date.today()
     yas = bugun.year - dogum_tarihi.year - ((bugun.month, bugun.day) < (dogum_tarihi.month, dogum_tarihi.day))
-    # E-posta Regex (7. Madde Çözümü)
+    # Güçlü Email Regex
     email_regex = r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
     
-    if not re.match(email_regex, email.lower()):
+    if not client:
+        st.error("API bağlantısı kurulamadı.")
+    elif not re.match(email_regex, email.lower()):
         st.error("Lütfen geçerli bir e-posta adresi girin.")
     elif not kvkk_onay:
-        st.warning("KVKK onayını işaretlemeniz zorunludur.")
+        st.warning("Devam etmek için KVKK onayını işaretlemelisiniz.")
     elif yas < 15:
-        st.warning(f"Analiz 15 yaş ve üzeri için tasarlanmıştır. Yaşınız: {yas}")
+        st.warning(f"Analiz 15 yaş ve üzeri içindir. Yaşınız: {yas}")
     else:
         placeholder = st.empty()
-        placeholder.info("Kuantum alan taranıyor, atasal bağlar inceleniyor...")
+        placeholder.info("Kökler taranıyor, analiz mühürleniyor...")
 
         try:
-            # DOĞUM SAATI MEKANİZMASI
-            saat_anlami = ""
-            if dogum_saati.hour < 6: saat_anlami = "Şafak öncesi sessizliği; ailenin gizli, söylenmemiş yüklerini gün ışığına çıkarma görevi."
-            elif dogum_saati.hour < 12: saat_anlami = "Yükselen güneş enerjisi; sistemik tıkanıklıkları eylemle çözme potansiyeli."
-            elif dogum_saati.hour < 18: saat_anlami = "Gündüzün zirvesi; aile itibarını ve toplumsal yükleri taşıma eğilimi."
-            else: saat_anlami = "Gece derinliği; bilinçaltı rehberliği ve duygusal köprü olma misyonu."
+            # DOĞUM SAATI MEKANİZMASI (11. Madde Çözümü)
+            saat_kod = ""
+            if dogum_saati.hour < 6: saat_kod = "Gece yarısı/Şafak: Bilinçaltı sırlarını ve sistemik yasları temsil eder."
+            elif dogum_saati.hour < 12: saat_kod = "Sabah: Eylem ve dışa dönük yaşam enerjisini temsil eder."
+            elif dogum_saati.hour < 18: saat_kod = "Gündüz: Toplumsal maskeler ve sorumluluk yükünü temsil eder."
+            else: saat_kod = "Akşam/Gece: Ruhsal derinlik ve duygusal köprü olma misyonunu temsil eder."
 
-            # V6 - MASTER PROMPT (Derin Mekanizma Odaklı)
+            # V7 MASTER PROMPT (Sert ve Mekanizma Odaklı)
             prompt_metni = f"""
-            ROL: Sen Serap Hano'sun. %100 Türkçe konuşan, sarsıcı içgörüler üreten bir Sistem Dizimi rehberisin.
-            
-            KULLANICI VERİLERİ (BUNLARI ASLA TEKRARLAMA):
+            ROL: Sen usta bir Sistem Dizimi uzmanı Serap Hano'sun. 
+            VERİLER (ASLA RAKAMLA TEKRARLAMA):
             - Danışan: {yas} yaşında {cinsiyet}, {kardes_sirasi}. çocuk.
-            - Anne-Baba Evliliği: {aile_evlilik}
-            - Ailede Dışlanan: {dislanan_biri}, Yazgı: {agir_yazgi}, Travma: {kisisel_travma}
-            - Tıkanıklık: {tikaniklik}, Enerji: {saat_anlami}
+            - Anne-Baba Evliliği (Kullanıcının DEĞİL!): {aile_evlilik}
+            - Ailede Dışlanan (Kullanıcının DEĞİL!): {dislanan_biri}
+            - Atasal Yazgı: {agir_yazgi}
+            - Kişisel Travma: {kisisel_travma}
+            - Tıkanıklık: {tikaniklik}, Saat Enerjisi: {saat_kod}
 
-            SİSTEMİK MEKANİZMA TALİMATLARI:
-            1. VERİ TEKRARI YASAKTIR: "27 yaşındasın", "{kardes_sirasi}. çocuksun" gibi cümleler KESİNLİKLE YASAK.
-            2. MEKANİZMA KUR: Sadece tespiti söyleme, NEDENİNİ açıkla. 
-               - Örn: Anne-baba sevgisiz evlendiyse; "Başarıyı, sevgisizliğin bedeli olarak kodlamış olabilirsin" de.
-               - Örn: Dışlanan biri varsa; "O kişinin sistemik ahı, bugün sende kariyer tıkanıklığı olarak yankılanıyor olabilir" de.
-            3. YASAKLI KELİMELER: "Yolculuk", "iç ışık", "gizem", "mucize", "only", "possible", "mümkün".
-            4. UZUNLUK: En az 150 kelime. Daha kısa yazarsan analiz derinleşmemiş sayılır.
-            5. DİL: Sadece 'SEN'. Rapor gibi değil, bir ruhun diğerine fısıldaması gibi.
+            TALİMATLAR:
+            1. MEKANİZMA KUR: "Atasal yükün var" deyip geçme. O yükün bugünkü {tikaniklik} alanını NASIL etkilediğini açıkla.
+               Örnek: "Anne-baban sevilmeden evlendiği için sen sevgiyi bir görev gibi kodlamışsın."
+            2. ÖZNE KONTROLÜ: Ebeveyn evliliğini veya dışlanan birini kullanıcıya atfetme. Onlar köklerdir.
+            3. YASAKLAR: "olabilir", "yönlendirebilir", "yolculuk", "iç ışık", "gizem", "mucize", "mümkün", "only", "experience", "loading".
+            4. DİL: Sadece 'SEN'. Rapor dili yasaktır. "Kişinin" kelimesini asla kullanma.
+            5. UZUNLUK: 150-200 kelime arası, derin, edebi ve sarsıcı.
 
             JSON ÇIKTI:
             {{
-                "isik": ["...", "..."],
-                "golge": ["...", "..."],
-                "analiz": "Mekanizma odaklı, sarsıcı, edebi ve en az 150 kelimelik analiz metni.",
-                "soru": "Ruhsal bir yüzleşme sorusu.",
+                "isik": ["Sistemik Yetenek 1", "Sistemik Yetenek 2"],
+                "golge": ["Atasal Yük 1", "Atasal Yük 2"],
+                "analiz": "Mekanizma odaklı, sarsıcı, %100 Türkçe analiz metni.",
+                "soru": "Ruhsal yüzleşme sorusu.",
                 "cta": "Serap Hano Akademi davet cümlesi."
             }}
             """
@@ -114,19 +116,21 @@ if submit:
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
-                    {"role": "system", "content": "Sen usta bir Sistem Dizimi uzmanısın. Kullanıcı verilerini papağan gibi tekrarlamaz, onların arkasındaki derin psikolojik nedenleri açıklarsın. Sadece Türkçe yazarsın."},
+                    {"role": "system", "content": "Sen %100 Türkçe konuşan usta bir edebiyatçısın. İngilizce kelime kullanırsan sistem çöker. Sadece JSON formatında cevap ver."},
                     {"role": "user", "content": prompt_metni}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.4
+                temperature=0.35 # Yaratıcılık kontrollü
             )
             
             res_data = json.loads(completion.choices[0].message.content)
             
-            # --- KELİME TEMİZLİĞİ (Ekstra Güvenlik) ---
+            # --- DİL MUHAFIZI (Regex Temizleme) ---
             analiz = res_data.get("analiz", "")
-            for yasakli in ["yolculuk", "yolculuğu", "mucize", "mümkün", "only", "possible"]:
-                analiz = re.sub(rf"\b{yasakli}\b", "dönüşüm", analiz, flags=re.IGNORECASE)
+            # Sadece Türk alfabesi ve noktalama işaretlerini koru, yabancı sızıntıları temizle
+            analiz = re.sub(r'[a-zA-Z]{4,}', '', analiz) # 4 harften uzun İngilizce kelimeleri sil
+            for zayif in ["olabilir", "yönlendirebilir", "gibi"]:
+                analiz = analiz.replace(zayif, "durumundadır")
 
             placeholder.empty()
 
@@ -149,7 +153,7 @@ if submit:
             
             cta = res_data.get('cta', '')
             if cta:
-                st.markdown(f"<div style='text-align: center; border: 2px dashed #4caf50; padding: 25px; border-radius: 15px; color: #2e7d32; font-weight: bold;'>🎯 {html.escape(cta)}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='text-align: center; border: 2px dashed #4caf50; padding: 25px; border-radius: 15px; color: #2e7d32; font-weight: bold; background: #f1f8e9;'>🎯 {html.escape(cta)}</div>", unsafe_allow_html=True)
 
             # --- KART VE PAYLAŞIM ---
             tilsim_kartlari = {
@@ -166,7 +170,7 @@ if submit:
 
             st.balloons()
 
-            # Kayıt
+            # Kayıt (Google Scripts)
             try:
                 requests.post(SCRIPT_URL, json={
                     "email": email, "tikaniklik": tikaniklik,
