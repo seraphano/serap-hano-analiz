@@ -22,7 +22,7 @@ st.markdown("""
     .stApp { background-color: #fdfcfb; }
     .success-box { background-color: #e8f5e9; padding: 18px; border-radius: 12px; border-left: 6px solid #4caf50; margin-bottom: 10px; color: #2e7d32; font-size: 15px; }
     .error-box { background-color: #fff3e0; padding: 18px; border-radius: 12px; border-left: 6px solid #ff9800; margin-bottom: 10px; color: #e65100; font-size: 15px; }
-    .main-text { font-size: 19px; line-height: 2.1; color: #2c3e50; background: #fff; padding: 35px; border-radius: 20px; border: 1px solid #eee; margin-bottom: 25px; white-space: pre-wrap; }
+    .main-text { font-size: 19px; line-height: 2.1; color: #2c3e50; background: #fff; padding: 35px; border-radius: 20px; border: 1px solid #eee; margin-bottom: 25px; white-space: pre-wrap; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -41,7 +41,6 @@ with st.form("analiz_formu"):
     with col_c:
         cinsiyet = st.selectbox("Cinsiyetiniz:", ["Kadın", "Erkek", "Belirtmek İstemiyorum"])
     with col_y:
-        # Takvim ayarları
         dogum_tarihi = st.date_input("Doğum Tarihiniz", 
                                      min_value=date(1920, 1, 1), 
                                      max_value=date.today(),
@@ -71,40 +70,44 @@ with st.form("analiz_formu"):
     submit = st.form_submit_button("Sistemik Analizi Başlat")
 
 if submit:
-    # YAŞ KONTROLÜ (15 Yaş Sınırı)
     bugun = date.today()
     yas = bugun.year - dogum_tarihi.year - ((bugun.month, bugun.day) < (dogum_tarihi.month, dogum_tarihi.day))
     
     if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
         st.error("Lütfen geçerli bir e-posta adresi girin.")
     elif yas < 15:
-        st.warning(f"Sistemik alan analizi 15 yaş ve üzeri bireyler için tasarlanmıştır. (Şu anki hesaplanan yaşınız: {yas})")
+        st.warning(f"Sistemik alan analizi 15 yaş ve üzeri bireyler için tasarlanmıştır. (Yaşınız: {yas})")
     else:
         placeholder = st.empty()
         for step in ["Kökler taranıyor...", "Atasal bağlar inceleniyor...", "Sistemik alan mühürleniyor..."]:
             with placeholder.container():
                 st.info(step)
-                time.sleep(1.5)
+                time.sleep(1.2)
         placeholder.empty()
 
         try:
-            # --- TİTİZLİKLE HAZIRLANMIŞ PROMPT ---
+            # --- YAŞ SKALASI VE PROMPT SİHRİ ---
             prompt_metni = f"""
-            ROL: Sen Serap Hano'sun. %100 saf Türkçe konuşan, bilge ve mistik bir Sistem Dizimi uzmanısın.
-            VERİLER: {yas} yaşında {cinsiyet}, {kardes_sirasi}. çocuk, Evlilik: {aile_evlilik}, Dışlanan: {dislanan_biri}, Yazgı: {agir_yazgi}, Travma: {kisisel_travma}, Saat: {dogum_saati}, Alan: {tikaniklik}.
+            ROL: Sen Serap Hano'sun. %100 saf Türkçe konuşan, asla yabancı kelime kullanmayan bilge bir rehbersin.
+            KULLANICI: {yas} yaşında {cinsiyet}, {kardes_sirasi}. çocuk. Alan: {tikaniklik}.
+            
+            YAŞ SKALASI TALİMATI:
+            - 15-20: Yaşamın eşiğinde, kimlik ve aidiyet arayışında bir genç olarak yorumla.
+            - 20-30: Kendi yolunu çizme, köklerden kopma ve bireyselleşme çabasıyla yorumla.
+            - 30-45: İnşa etme, aile kurma ve kariyerde 'yerini alma' sancılarıyla yorumla.
+            - 45-60: Olgunluk, hasat vakti ve köklerle barışma dönemi olarak yorumla.
+            - 60+: Bilgelik, aktarım ve ruhsal huzur odaklı yorumla.
 
-            KESİN TALİMATLAR:
-            1. DİL: SADECE TÜRKÇE. 'Power', 'slowly', 'energy' gibi İngilizce kelimeleri kullanmak KESİNLİKLE YASAKTIR. Bunların Türkçe karşılıklarını (güç, yavaş yavaş, enerji) kullan.
-            2. YAŞA GÖRE ÜSLUP: Kullanıcı {yas} yaşında. Analizi bu olgunluk seviyesine göre kurgula.
-            3. ROBOTİK TEKRAR YASAK: "Sen {yas} yaşındasın" veya "Saat {dogum_saati} olduğu için" gibi cümleler kurma. Bilgiyi hissettir ama rakamla yazma.
-            4. İMLA: Türk Dil Kurumu kurallarına uy. Cümleleri akıcı ve derin yaz.
-            5. BAŞLANGIÇ: Direkt olarak ruhsal bir tespitle başla, seçenekleri onaylayarak başlama.
-
-            JSON ÇIKTI YAPISI:
+            DİL VE İMLA KURALLARI (HAYATİ):
+            1. SADECE TÜRKÇE. 'necessary', 'only', 'provide', 'power' gibi kelimeler KESİNLİKLE YASAK.
+            2. Çince veya yabancı karakter kullanımı YASAK.
+            3. Verileri (yas, saat, alan) metin içinde rakamla tekrarlama; onları hissettir.
+            
+            JSON ÇIKTI:
             {{
-                "isik": ["...", "..."],
-                "golge": ["...", "..."],
-                "analiz": "En az 250 kelimelik, edebi, sarsıcı ve tamamen Türkçe analiz.",
+                "isik": ["Sistemik Güç 1", "Sistemik Güç 2"],
+                "golge": ["Sistemik Yük 1", "Sistemik Yük 2"],
+                "analiz": "En az 250 kelimelik, edebi, sadece 'sen' diliyle yazılmış Türkçe analiz.",
                 "soru": "Ruhsal bir soru.",
                 "cta": "Serap Hano Akademi daveti."
             }}
@@ -112,8 +115,10 @@ if submit:
             
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=[{"role": "system", "content": "Sen usta bir Türk edebiyatçısı ve sistem dizimi uzmanısın. Asla İngilizce kelime kullanamazsın."},
-                          {"role": "user", "content": prompt_metni}],
+                messages=[
+                    {"role": "system", "content": "Sen usta bir Türk edebiyatçısın. İngilizce veya yabancı kelime kullanman imkansızdır. Tüm karakterlerin Türkçe alfabe ile uyumlu olmalıdır."},
+                    {"role": "user", "content": prompt_metni}
+                ],
                 response_format={"type": "json_object"}
             )
             
@@ -131,7 +136,11 @@ if submit:
                 st.write("🟠 **Sistemik Gölgen**")
                 for g in res_data.get('golge', []): st.markdown(f'<div class="error-box">{g}</div>', unsafe_allow_html=True)
 
-            st.markdown(f'<div class="main-text">{res_data.get("analiz", "")}</div>', unsafe_allow_html=True)
+            # Metin temizleme (Eğer hala kaçak varsa diye önlem)
+            analiz_temiz = res_data.get('analiz', '')
+            analiz_temiz = re.sub(r'[^\x00-\x7f\x80-\xffüÜğĞıİşŞçÇöÖ]', '', analiz_temiz) # Yabancı karakterleri temizler
+
+            st.markdown(f'<div class="main-text">{analiz_temiz}</div>', unsafe_allow_html=True)
             st.warning(f"🔍 **Ruhuna Soru:** {res_data.get('soru', '')}")
             
             # --- KART VE PAYLAŞIM ---
@@ -149,11 +158,11 @@ if submit:
             
             st.balloons()
 
-            # Kayıt
+            # Arka Plan Kaydı
             try:
                 requests.post(SCRIPT_URL, json={
                     "email": email, "detay": f"Yas:{yas}, Cin:{cinsiyet}, Alan:{tikaniklik}",
-                    "analiz": res_data.get('analiz', ''), "soru": res_data.get('soru', '')
+                    "analiz": analiz_temiz, "soru": res_data.get('soru', '')
                 }, timeout=10)
             except: pass
 
