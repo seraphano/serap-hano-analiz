@@ -8,10 +8,10 @@ import html
 from datetime import date
 import urllib.parse
 
-# 1. Page Config (Zorunlu olarak en üstte)
+# 1. Page Config (Zorunlu olarak en üstte olmalı)
 st.set_page_config(page_title="Serap Hano Akademi | Analiz Rehberi", layout="centered")
 
-# --- GÖRSEL TASARIM ---
+# --- GÖRSEL TASARIM VE CSS ---
 st.markdown("""
     <style>
     .stApp { background-color: #fdfcfb; }
@@ -73,37 +73,41 @@ if submit:
         placeholder.info("Sistemik alan taranıyor, analiz mühürleniyor...")
 
         try:
-            # Enerji İmzası
+            # Enerji İmzası Hesabı
             saat_enerjisi = ""
-            if dogum_saati.hour < 6: saat_enerjisi = "Şafak öncesi sessizliği; ailenin gizli yüklerini çözme gücü."
-            elif dogum_saati.hour < 12: saat_enerjisi = "Sabah ışığı; yeni yollar açma ve sistemik liderlik."
-            else: saat_enerjisi = "Gün batımı ve gece; ruhsal köprü olma ve bilinçaltı rehberliği."
+            if dogum_saati.hour < 6:
+                saat_enerjisi = "Şafak öncesi sessizliği; ailenin gizli yüklerini çözme gücü."
+            elif dogum_saati.hour < 12:
+                saat_enerjisi = "Sabah ışığı; yeni yollar açma ve sistemik liderlik."
+            else:
+                saat_enerjisi = "Gün batımı ve gece; ruhsal köprü olma ve bilinçaltı rehberliği."
 
-            # PROMPT
+            # PROMPT (Sistemik ve Mekanizma Odaklı)
             prompt_metni = f"""
-            ROL: Sen Serap Hano'sun. %100 Türkçe konuşan, sarsıcı içgörüler üreten bir Sistem Dizimi uzmanısın.
+            ROL: Sen usta Sistem Dizimi uzmanı Serap Hano'sun. Bilge, sarsıcı ve %100 Türkçe konuşan bir rehbersin.
             
             KÖK VERİLER (BUNLAR AİLENİN HİKAYESİDİR, DANIŞANIN DEĞİL):
             - Anne-Baba Evliliği: {aile_evlilik}
             - Ailede Dışlanan: {dislanan_biri}
             - Atasal Yazgı: {agir_yazgi}
             
-            DANIŞAN BİLGİLERİ:
+            DANIŞAN VERİLERİ (SENİN ÖZNENDİR):
             - Profil: {yas} yaşında {cinsiyet}, {kardes_sirasi}. çocuk.
-            - Kişisel Geçmiş: {kisisel_travma}, Tıkanıklık: {tikaniklik}
-            - Enerji İmzası: {saat_enerjisi}
+            - Kişisel Travma: {kisisel_travma}
+            - Tıkanıklık Alanı: {tikaniklik}
+            - Saat Enerjisi: {saat_enerjisi}
 
-            ANALİZ KURALLARI:
-            1. ÖZNE AYRIMI: Ebeveyn evliliğini sakın DANIŞANIN KENDİ hikayesi gibi yazma. Onlar köktür, danışan meyvedir.
-            2. MEKANİZMA KUR: Sadece veri tekrarı yapma. Bu verilerin neden bugün {tikaniklik} alanında kilitlenme yarattığını açıkla.
-            3. YASAKLAR: "olabilir", "yönlendirebilir", "yolculuk", "iç ışık", "gizem", "mucize", "mümkün", "only", "possible".
-            4. DİL: Sadece 'SEN'. Rapor dili kullanma. Rakamları metne geçirme.
+            KESİN KURALLAR:
+            1. ÖZNE AYRIMI: Ebeveyn evliliğini sakın DANIŞANIN KENDİ hikayesiymiş gibi yazma. Onlar köktür, danışan meyvedir.
+            2. MEKANİZMA KUR: Sadece veriyi söyleme, o verinin neden bugün {tikaniklik} alanında kilitlenme yarattığını kollektif vicdan üzerinden açıkla. 
+            3. YASAKLAR: "olabilir", "yönlendirebilir", "yolculuk", "iç ışık", "gizem", "mucize", "mümkün", "only", "possible", "loading", "experience".
+            4. VERİ TEKRARI YASAK: Rakamları (27, 2. çocuk vb.) metne geçirme. Onları edebi olarak hissettir.
 
             JSON ÇIKTI:
             {{
                 "isik": ["Sistemik Güç 1", "Sistemik Güç 2"],
-                "golge": ["Taşınan Atasal Yük 1", "Taşınan Atasal Yük 2"],
-                "analiz": "En az 160 kelimelik, sarsıcı, edebi ve mekanizma odaklı analiz.",
+                "golge": ["Atasal Yük 1", "Atasal Yük 2"],
+                "analiz": "En az 160 kelimelik, sarsıcı, edebi ve mekanizma odaklı Türkçe analiz metni.",
                 "soru": "Ruhsal bir yüzleşme sorusu.",
                 "cta": "Serap Hano Akademi davet cümlesi."
             }}
@@ -112,7 +116,7 @@ if submit:
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
-                    {"role": "system", "content": "Sen %100 Türkçe konuşan bir edebiyatçısın. İngilizce kelime kullanman imkansızdır."},
+                    {"role": "system", "content": "Sen usta bir Türk edebiyatçısın. İngilizce kelime kullanman imkansızdır. Sadece JSON formatında cevap verirsin."},
                     {"role": "user", "content": prompt_metni}
                 ],
                 response_format={"type": "json_object"},
@@ -136,6 +140,7 @@ if submit:
                 for g in res_data.get('golge', []): 
                     st.markdown(f'<div class="error-box">{html.escape(g)}</div>', unsafe_allow_html=True)
 
+            # Analiz Metni
             st.markdown(f'<div class="main-text">{html.escape(res_data.get("analiz", ""))}</div>', unsafe_allow_html=True)
             st.warning(f"🔍 **Ruhuna Soru:** {html.escape(res_data.get('soru', ''))}")
             
@@ -149,4 +154,26 @@ if submit:
                 "Özgüven & Özdeğer": "https://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-ozguven-ozdeger.webp",
                 "Kariyer": "https://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-kariyer.webp",
                 "Para & Bereket": "https://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-para-bereket.webp",
-                "İlişkiler":
+                "İlişkiler": "https://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-iliskiler.webp"
+            }
+            
+            if tikaniklik in tilsim_kartlari:
+                st.image(tilsim_kartlari[tikaniklik], use_container_width=True)
+                share_text = f"Köklerin Gizemi analizimi yaptım! ✨ Sen de denemelisin: https://seraphano-analiz.streamlit.app"
+                share_msg = urllib.parse.quote(share_text)
+                st.markdown(f"<div style='text-align: center; margin-top: 15px;'><a href='https://api.whatsapp.com/send?text={share_msg}' target='_blank' style='background-color: #25D366; color: white; padding: 10px 25px; text-decoration: none; border-radius: 30px; font-weight: bold;'>🌿 WhatsApp'ta Paylaş</a></div>", unsafe_allow_html=True)
+
+            st.balloons()
+
+            # Google Sheets Kaydı
+            try:
+                requests.post(SCRIPT_URL, json={
+                    "email": email, "tikaniklik": tikaniklik,
+                    "detay": f"Yas:{yas}, Cin:{cinsiyet}, Sira:{kardes_sirasi}, Yazgi:{agir_yazgi}, Evlilik:{aile_evlilik}",
+                    "analiz": res_data.get('analiz', ''), "soru": res_data.get('soru', '')
+                }, timeout=15)
+            except:
+                pass
+
+        except Exception as e:
+            st.error("Bir enerji yoğunluğu oluştu, lütfen formu tekrar gönderin.")
