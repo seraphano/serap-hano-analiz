@@ -37,8 +37,7 @@ def turkcelestir(metin):
     sozluk = {
         "experiences": "deneyimler", "experience": "deneyim",
         "life": "yaşam", "decision": "karar", "decisions": "kararlar",
-        "sometimes": "bazen", "health": "sağlık", "výběirlerini": "seçimlerini",
-        "výběr": "seçim", "important": "önemli", "factor": "faktör"
+        "sometimes": "bazen", "health": "sağlık"
     }
     for ing, tr in sozluk.items():
         metin = re.sub(rf'\b{ing}\b', tr, metin, flags=re.IGNORECASE)
@@ -57,50 +56,72 @@ def email_gecerli_mi(email):
 
 # --- FORM ---
 with st.form("analiz_formu"):
-    st.write("### Bilgilerinizi Mühürleyin")
-    email = st.text_input("E-posta adresiniz:", placeholder="ornek@mail.com")
+    st.write("### Ruhsal ve Sistemik Kayıtlarınızı Açın")
+    email = st.text_input("E-posta adresiniz:", placeholder="analiziniz buraya gönderilecek...")
     
-    col_g, col_a, col_y = st.columns(3)
-    with col_g: gun = st.selectbox("Gün", list(range(1, 32)))
-    with col_a: ay = st.selectbox("Ay", ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"])
-    with col_y: yil = st.selectbox("Yıl", list(range(2026, 1920, -1)), index=36)
+    col1, col2 = st.columns(2)
+    with col1:
+        dogum_tarihi = st.date_input("Doğum Tarihiniz", min_value=None)
+    with col2:
+        dogum_saati = st.time_input("Doğum Saatiniz (Yaklaşık)")
+
+    st.write("---")
     
-    kardes_sirasi = st.number_input("Annenizin kaçıncı çocuğusunuz?", min_value=1, step=1)
-    aile_hikayesi = st.selectbox("Aile geçmişinizde (göç, erken kayıp, iflas vb.) derin iz bırakan bir olay var mı?", ["Evet", "Hayır", "Bilmiyorum"])
-    tikaniklik = st.selectbox("Şifalanmasını ve açılmasını istediğiniz yaşam alanı:", ["İlişkiler", "Para & Bereket", "Kariyer", "Özgüven & Özdeğer", "Sağlık & Enerji"])
+    kardes_sirasi = st.number_input("Annenizin kaçıncı çocuğusunuz? (Düşük, kürtaj ve kayıpları sayarak)", min_value=1, step=1)
     
-    submit = st.form_submit_button("Dizimi Başlat")
+    aile_evlilik = st.selectbox("Ebeveynlerinizin evlilik temeli nedir?", 
+                                ["Severek evlendiler", "Görücü usulü", "Zorunlu / Mantık evliliği", "Bilmiyorum"])
+    
+    dislanan_biri = st.selectbox("Ailenizde dışlanmış, hakkı yenmiş veya adı hiç anılmayan biri var mı?", 
+                                 ["Evet, var", "Hayır, yok", "Emin değilim ama hissediyorum"])
+    
+    agir_yazgi = st.selectbox("Aile geçmişinde ağır bir yazgı (İntihar, erken kayıp, iflas, göç) mevcut mu?", 
+                              ["Evet, büyük travmalar var", "Hayır, sakin bir geçmiş", "Bazı zorluklar var"])
+
+    kisisel_travma = st.selectbox("Geçmişinizde derin iz bırakan bir depresyon veya travma yaşadınız mı?",
+                                  ["Evet, yaşadım", "Hayır, yaşamadım", "Hatırlamak istemiyorum / Belirsiz"])
+    
+    tikaniklik = st.selectbox("Şifalanmasını ve açılmasını istediğiniz yaşam alanı:", 
+                              ["İlişkiler", "Para & Bereket", "Kariyer", "Özgüven & Özdeğer", "Sağlık & Enerji"])
+    
+    submit = st.form_submit_button("Sistemik Analizi Başlat")
 
 if submit:
     if not email or not email_gecerli_mi(email):
         st.error("Lütfen geçerli bir e-posta adresi girin.")
     else:
         placeholder = st.empty()
-        for step in ["Kökler taranıyor...", "Atasal bağlar inceleniyor...", "Analiz mühürleniyor..."]:
+        for step in ["Kökler taranıyor...", "Atasal bağlar inceleniyor...", "Sistemik alan mühürleniyor..."]:
             with placeholder.container():
                 st.info(step)
                 time.sleep(2)
         placeholder.empty()
 
         try:
-            # KRİTİK: PROMPT İÇİNE 'JSON' KELİMESİ EKLENDİ
+            # --- DERİN SİSTEMİK PROMPT ---
             prompt_metni = f"""
-            Sen Serap Hano'sun. Bilge ve samimi bir Sistem Dizimi rehberisin. 
-            Kullanıcı Bilgileri: {kardes_sirasi}. çocuk, Tıkanıklık: {tikaniklik}, Aile Kaderi: {aile_hikayesi}.
+            Sen Serap Hano'sun. Bilge, samimi ve sarsıcı tespitler yapabilen bir Sistem Dizimi rehberisin. 
+            Kullanıcı Bilgileri:
+            - Kardeş Sırası: {kardes_sirasi}
+            - Doğum Saati: {dogum_saati}
+            - Ebeveyn Evliliği: {aile_evlilik}
+            - Dışlanan Biri: {dislanan_biri}
+            - Aile Yazgısı: {agir_yazgi}
+            - Kişisel Travma: {kisisel_travma}
+            - Tıkanıklık Alanı: {tikaniklik}
 
-            BU ANALİZİ BİR JSON FORMATINDA VERMELİSİN.
-            
-            KURALLAR:
-            1. %100 TÜRKÇE yaz. Asla yabancı kelime kullanma.
-            2. "Bir bireyin yaşamını..." gibi mesafeli başlama. Kalbe hitap et.
-            3. 'analiz' alanı en az 200 kelime olsun. Derin ve edebi olsun.
-            
-            JSON OBJESİ ŞU ANAHTARLARI İÇERMELİDİR:
+            GÖREVİN:
+            Bu verileri bir 'sistem dedektifi' gibi birleştirerek hayret uyandırıcı bir analiz yap. 
+            'Belki' veya 'Olabilir' gibi zayıf kelimeler kullanma. 
+            Örnek: Eğer dışlanan biri varsa ve tıkanıklık paraysa; bu paranın o kişinin iade-i itibarı için sistem tarafından kilitlendiğini vurgula.
+            Doğum saatini 'mizaç ve enerji alanı' (gece gizemi, öğle görünürlüğü gibi) olarak analize yedir.
+
+            JSON FORMATINDA CEVAP VER:
             {{
-                "isik": ["Özellik 1", "Özellik 2"],
-                "golge": ["Özellik 1", "Özellik 2"],
-                "analiz": "Derin ruhsal analiz metni...",
-                "soru": "Sana özel o can alıcı soru...",
+                "isik": ["Sistemik Gücün 1", "Sistemik Gücün 2"],
+                "golge": ["Taşıdığın Yük 1", "Taşıdığın Yük 2"],
+                "analiz": "En az 250 kelimelik, edebi derinliği yüksek, sarsıcı ve şifalı analiz metni...",
+                "soru": "Ruhun uykusunu kaçıracak o can alıcı soru...",
                 "cta": "Serap Hano Akademi davet cümlesi..."
             }}
             """
@@ -115,30 +136,30 @@ if submit:
 
             # --- SONUÇLAR ---
             st.markdown("---")
-            st.subheader("Ruhsal Haritanız Belirlendi")
+            st.subheader("Ruhsal Haritanız ve Atasal Kayıtlarınız")
             
             c1, c2 = st.columns(2)
             with c1:
-                st.write("🌿 **Işık Tarafın**")
+                st.write("🌿 **Sistemik Işığın**")
                 isiklar = veriyi_al(res_data, 'isik')
                 if isinstance(isiklar, list):
                     for i in isiklar: st.markdown(f'<div class="success-box">{i}</div>', unsafe_allow_html=True)
                 else: st.markdown(f'<div class="success-box">{isiklar}</div>', unsafe_allow_html=True)
             
             with c2:
-                st.write("🟠 **Gölge Tarafın**")
+                st.write("🟠 **Sistemik Gölgen (Taşıdığın Yük)**")
                 golgeler = veriyi_al(res_data, 'golge')
                 if isinstance(golgeler, list):
                     for g in golgeler: st.markdown(f'<div class="error-box">{g}</div>', unsafe_allow_html=True)
                 else: st.markdown(f'<div class="error-box">{golgeler}</div>', unsafe_allow_html=True)
 
             st.markdown(f'<div class="main-text">{veriyi_al(res_data, "analiz")}</div>', unsafe_allow_html=True)
-            st.warning(f"🔍 **Sana Özel Soru:** {veriyi_al(res_data, 'soru')}")
+            st.warning(f"🔍 **Ruhuna Soru:** {veriyi_al(res_data, 'soru')}")
             
             cta_text = veriyi_al(res_data, 'cta')
             st.markdown(f"<h3 style='text-align: center; color: #2e7d32; padding: 25px; border: 2px dashed #4caf50; border-radius: 15px; background: #f1f8e9;'>🎯 {cta_text}</h3>", unsafe_allow_html=True)
             
-# --- 🃏 RUH KARTI VE PAYLAŞIM ALANI ---
+            # --- 🃏 RUH KARTI VE PAYLAŞIM ALANI ---
             tilsim_kartlari = {
                 "Sağlık & Enerji": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-saglik.webp",
                 "Özgüven & Özdeğer": "http://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-ozguven-ozdeger.webp",
@@ -158,7 +179,7 @@ if submit:
                     </div>
                 """, unsafe_allow_html=True)
 
-                # --- 📱 SOSYAL MEDYA BUTONLARI ---
+                # --- 📱 SOSYAL MEDYA PAYLAŞIM ---
                 import urllib.parse
                 share_text = f"Serap Hano Akademi'de Köklerin Gizemi analizimi yaptım! ✨ Sen de denemelisin: https://seraphano-analiz.streamlit.app"
                 safe_text = urllib.parse.quote(share_text)
@@ -174,22 +195,22 @@ if submit:
                     </div>
                 """, unsafe_allow_html=True)
 
-            # --- 🎈 ÖNCE BALONLAR (HIZLI ÇALIŞIR) ---
+            # --- 🎈 BALONLAR ---
             st.balloons()
 
-            # --- 💾 SONRA ARKA PLAN KAYDI (SESSİZCE ÇALIŞIR) ---
+            # --- 💾 ARKA PLAN KAYDI ---
             try:
                 analiz_metni = veriyi_al(res_data, "analiz")
                 soru_metni = veriyi_al(res_data, 'soru')
                 requests.post(SCRIPT_URL, json={
                     "email": email, 
-                    "dogum": f"{gun} {ay} {yil}", 
-                    "sira": str(kardes_sirasi), 
+                    "detay": f"Sira:{kardes_sirasi}, Evlilik:{aile_evlilik}, Dislanan:{dislanan_biri}",
                     "tikaniklik": tikaniklik,
                     "analiz": analiz_metni,
                     "soru": soru_metni
                 }, timeout=10)
             except:
                 pass
+
         except Exception as e:
-            st.error(f"Enerji alanında bir karışıklık oldu: {e}")
+            st.error(f"Sistemik alanda bir karışıklık oluştu: {e}")
