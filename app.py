@@ -50,4 +50,24 @@ if "GROQ_API_KEY" in st.secrets:
 else:
     st.error("Sistem ayarları eksik!")
 
-st
+st.title("✨ Köklerin Gizemi")
+st.write("Sadece verilerin değil, senin hikayenin sessiz yankıları.")
+
+# --- FORM ---
+with st.form("analiz_formu"):
+    st.write("### Ruhsal Kayıtlarını Aç")
+    email = st.text_input("E-posta adresin:", placeholder="analizin buraya mühürlenecek...")
+    
+    col_c, col_y = st.columns(2)
+    with col_c:
+        cinsiyet = st.selectbox("Cinsiyetin:", ["Kadın", "Erkek", "Belirtmek İstemiyorum"])
+    with col_y:
+        dogum_tarihi = st.date_input("Doğum Tarihin", min_value=date(1920, 1, 1), value=date(1990, 1, 1))
+
+    dogum_saati = st.time_input("Doğum Saatin (Yaklaşık)")
+
+    st.write("---")
+    kardes_sirasi = st.number_input("Kaçıncı çocuksun? (Düşük/Kayıplar dahil)", min_value=1, step=1)
+    aile_evlilik = st.selectbox("EBEVEYNLERİNİN evliliği?", ["Severek evlendiler", "Görücü usulü", "Mantık/Zorunlu evlilik", "Bilmiyorum"])
+    dislanan_biri = st.selectbox("AİLEDE dışlanan/hakkı yenen biri var mı?", ["Evet, var", "Hayır, yok", "Emin değilim"])
+    agir_yazgi = st.selectbox("AİLEDE ağır bir yazgı (İntihar, iflas, erken ölüm)?", ["Evet, var", "Hayır, yok", "Bazı zorluk
