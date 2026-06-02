@@ -1,7 +1,6 @@
 import streamlit as st
 from groq import Groq
 import json
-import time
 import requests
 import html
 from datetime import date
@@ -57,4 +56,43 @@ else:
 # --- SESSION STATE TANIMLAMALARI ---
 if "analiz_verisi" not in st.session_state:
     st.session_state.analiz_verisi = None
-if "ruh_yasi" not in
+if "ruh_yasi" not in st.session_state:
+    st.session_state.ruh_yasi = None
+if "tikaniklik_secimi" not in st.session_state:
+    st.session_state.tikaniklik_secimi = None
+if "soru_hakki" not in st.session_state:
+    st.session_state.soru_hakki = 3
+if "sohbet_gecmisi" not in st.session_state:
+    st.session_state.sohbet_gecmisi = []
+
+st.title("✨ Köklerin Gizemi")
+st.write("Sadece verilerin değil, senin hikayenin sessiz yankıları.")
+
+# --- FORM ---
+with st.form("analiz_formu"):
+    st.write("### Ruhsal Kayıtlarını Aç")
+    email = st.text_input("E-posta adresin:", placeholder="analizin buraya mühürlenecek...")
+    
+    col_c, col_y = st.columns(2)
+    with col_c:
+        cinsiyet = st.selectbox(
+            "Cinsiyetin:", 
+            ["Kadın", "Erkek", "Belirtmek İstemiyorum"]
+        )
+    with col_y:
+        dogum_tarihi = st.date_input(
+            "Doğum Tarihin", 
+            min_value=date(1920, 1, 1), 
+            value=date(1990, 1, 1)
+        )
+
+    dogum_saati = st.time_input("Doğum Saatin (Yaklaşık)")
+
+    st.write("---")
+    kardes_sirasi = st.number_input(
+        "Kaçıncı çocuksun? (Düşük/Kayıplar dahil)", 
+        min_value=1, step=1
+    )
+    aile_evlilik = st.selectbox(
+        "EBEVEYNLERİNİN evliliği?", 
+        ["Severek evlendiler
