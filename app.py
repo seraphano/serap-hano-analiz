@@ -5,6 +5,7 @@ import requests
 import html
 from datetime import date
 import urllib.parse
+import random
 
 # 1. Page Config
 st.set_page_config(page_title="Serap Hano Akademi | Ruhun Aynası", layout="centered")
@@ -53,6 +54,11 @@ else:
     st.error("Sistem ayarları eksik!")
 
 st.title("✨ Köklerin Gizemi")
+if "soru_hakki" not in st.session_state:
+    st.session_state.soru_hakki = 3
+
+if "analiz_bitti" not in st.session_state:
+    st.session_state.analiz_bitti = False
 st.write("Sadece verilerin değil, senin hikayenin sessiz yankıları.")
 
 # --- FORM ---
@@ -193,14 +199,24 @@ if submit:
                 "- ASLA rakam ve veri isimlerini olduğu gibi yazma.\n"
                 "- 'yolculuk', 'iç ışık', 'gizem', 'mucize', 'mümkün', 'enerji' kelimelerini kullanma.\n"
                 "- Robotik paragraflar yerine; kısa, ritmik cümleler kur.\n\n"
-                "JSON ÇIKTI:\n"
-                "{\n"
-                '  "isik": ["Miras kalan güce dair 1. madde", "2. madde"],\n'
-                '  "golge": ["Dönüşmeyi bekleyen yüke dair 1. madde", "2. madde"],\n'
-                '  "analiz": "Özel görevi yerine getiren, 130-180 kelimelik, şiirsel Türkçe metin.",\n'
-                '  "soru": "Ruhsal bir yüzleşme sorusu.",\n'
-                '  "cta": "Serap Hano Akademi davet cümlesi."\n'
-                "}"
+                "EK GÖREVLER:\n"
+"- Kullanıcıya gelecekteki halinden bir mektup yaz.\n"
+"- Kullanıcının hayatını sinema fragmanı gibi anlat.\n"
+"- Ruh yaşını açıklayan kısa bir yorum üret.\n"
+"- Tamamen sembolik aile hikayesi oluştur.\n"
+"- Bunları gerçek bilgi gibi değil metaforik anlat.\n\n"
+               "JSON ÇIKTI:\n"
+"{\n"
+'  "isik": ["madde","madde"],\n'
+'  "golge": ["madde","madde"],\n'
+'  "analiz": "metin",\n'
+'  "soru": "soru",\n'
+'  "cta": "cta",\n'
+'  "gelecek_mektubu": "7 yıl sonraki halinden gelen mektup",\n'
+'  "hayat_fragmani": "Netflix tarzı hayat fragmanı",\n'
+'  "ruh_yasi_yorumu": "ruh yaşını açıklayan metin",\n'
+'  "sembolik_aile_hikayesi": "tamamen sembolik aile anlatısı"\n'
+"}"
             )
             
             completion = client.chat.completions.create(
@@ -274,7 +290,22 @@ if submit:
                     f"font-weight: bold;'>🌿 WhatsApp'ta Paylaş</a></div>", 
                     unsafe_allow_html=True
                 )
+st.markdown("---")
+st.subheader("⏳ Ruh Yaşın")
 
+ruh_yasi = yas + random.randint(7, 24)
+
+st.metric(
+    "Hissedilen Ruh Yaşı",
+    ruh_yasi
+)
+
+st.info(
+    res_data.get(
+        "ruh_yasi_yorumu",
+        ""
+    )
+)
             st.balloons()
 
             # Kayıt
