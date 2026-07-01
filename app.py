@@ -9,9 +9,14 @@ import random
 
 # 1. Page Config
 st.set_page_config(
-    page_title="Serap Hano Akademi | Ruhun Aynası", 
+    page_title="Serap Hano Akademi | Ruhun Aynası",
     layout="centered"
 )
+
+# --- MODEL AYARI ---
+# Groq tarafında Llama 3.3 70B Versatile modeli kaldırılacağı için yeni model burada tanımlandı.
+# İleride model değişirse yalnızca bu satırı güncellemen yeterli.
+GROQ_MODEL = "openai/gpt-oss-120b"
 
 # --- CSS: ŞİİRSEL VE DERİN TASARIM ---
 st.markdown("""
@@ -82,7 +87,9 @@ st.markdown("""
 
 # --- BAĞLANTI ---
 client = None
-if "GROQ_API_KEY" in st.secrets:
+SCRIPT_URL = None
+
+if "GROQ_API_KEY" in st.secrets and "GOOGLE_SCRIPT_URL" in st.secrets:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
     SCRIPT_URL = st.secrets["GOOGLE_SCRIPT_URL"]
 else:
@@ -107,87 +114,89 @@ st.write("Sadece verilerin değil, senin hikayenin sessiz yankıları.")
 with st.form("analiz_formu"):
     st.write("### Ruhsal Kayıtlarını Aç")
     email = st.text_input(
-        "E-posta adresin:", 
+        "E-posta adresin:",
         placeholder="analizin buraya mühürlenecek..."
     )
-    
+
     col_c, col_y = st.columns(2)
     with col_c:
         cinsiyet = st.selectbox(
-            "Cinsiyetin:", 
+            "Cinsiyetin:",
             [
-                "Kadın", 
-                "Erkek", 
+                "Kadın",
+                "Erkek",
                 "Belirtmek İstemiyorum"
             ]
         )
     with col_y:
         dogum_tarihi = st.date_input(
-            "Doğum Tarihin", 
-            min_value=date(1920, 1, 1), 
+            "Doğum Tarihin",
+            min_value=date(1920, 1, 1),
             value=date(1990, 1, 1)
         )
 
     dogum_saati = st.time_input("Doğum Saatin (Yaklaşık)")
 
     st.write("---")
+
     kardes_sirasi = st.number_input(
-        "Kaçıncı çocuksun? (Düşük/Kayıplar dahil)", 
-        min_value=1, step=1
+        "Kaçıncı çocuksun? (Düşük/Kayıplar dahil)",
+        min_value=1,
+        step=1
     )
-    
+
     aile_evlilik = st.selectbox(
-        "EBEVEYNLERİNİN evliliği?", 
+        "EBEVEYNLERİNİN evliliği?",
         [
-            "Severek evlendiler", 
-            "Görücü usulü", 
-            "Mantık/Zorunlu evlilik", 
+            "Severek evlendiler",
+            "Görücü usulü",
+            "Mantık/Zorunlu evlilik",
             "Bilmiyorum"
         ]
     )
-    
+
     dislanan_biri = st.selectbox(
-        "AİLEDE dışlanan/hakkı yenen biri var mı?", 
+        "AİLEDE dışlanan/hakkı yenen biri var mı?",
         [
-            "Evet, var", 
-            "Hayır, yok", 
+            "Evet, var",
+            "Hayır, yok",
             "Emin değilim"
         ]
     )
-    
+
     agir_yazgi = st.selectbox(
-        "AİLEDE ağır bir yazgı (İntihar, iflas, erken ölüm)?", 
+        "AİLEDE ağır bir yazgı (İntihar, iflas, erken ölüm)?",
         [
-            "Evet, var", 
-            "Hayır, yok", 
+            "Evet, var",
+            "Hayır, yok",
             "Bazı zorluklar var"
         ]
     )
-    
+
     kisisel_travma = st.selectbox(
-        "SİZİN geçmişinizde derin bir travma/depresyon oldu mu?", 
+        "SİZİN geçmişinizde derin bir travma/depresyon oldu mu?",
         [
-            "Evet", 
-            "Hayır", 
+            "Evet",
+            "Hayır",
             "Belirsiz"
         ]
     )
-    
+
     tikaniklik = st.selectbox(
-        "Şifalanmasını istediğin alan:", 
+        "Şifalanmasını istediğin alan:",
         [
-            "İlişkiler", 
-            "Para & Bereket", 
-            "Kariyer", 
-            "Özgüven & Özdeğer", 
+            "İlişkiler",
+            "Para & Bereket",
+            "Kariyer",
+            "Özgüven & Özdeğer",
             "Sağlık & Enerji"
         ]
     )
-    
+
     kvkk_onay = st.checkbox(
         "Ruhsal kayıtlarımın işlenmesine ve analiz edilmesine onay veriyorum."
     )
-    
+
     submit = st.form_submit_button("Dizimi Başlat")
 
 if submit:
@@ -195,11 +204,13 @@ if submit:
     yas = bugun.year - dogum_tarihi.year - (
         (bugun.month, bugun.day) < (dogum_tarihi.month, dogum_tarihi.day)
     )
-    
+
     if not email or "@" not in email:
         st.error("Lütfen geçerli bir e-posta girin.")
     elif not kvkk_onay:
         st.warning("Onay vermeden dizim başlayamaz.")
+    elif client is None:
+        st.error("Sistem bağlantısı kurulamadı. Lütfen daha sonra tekrar deneyin.")
     else:
         placeholder = st.empty()
         placeholder.info(
@@ -209,17 +220,17 @@ if submit:
         try:
             # Enerji İmzası
             saat_notu = ""
-            if dogum_saati.hour < 6: 
+            if dogum_saati.hour < 6:
                 saat_notu = (
                     "Şafak öncesinin derin sessizliği; "
                     "saklıyı görme ve kökleri şifalandırma gücü."
                 )
-            elif dogum_saati.hour < 12: 
+            elif dogum_saati.hour < 12:
                 saat_notu = (
                     "Sabahın yükselen iradesi; "
                     "tıkanıklıkları cesaretle dönüştürme potansiyeli."
                 )
-            else: 
+            else:
                 saat_notu = (
                     "Gecenin bilinçaltı rehberliği; "
                     "ruhsal köprüler kurma ve sezgisel derinlik."
@@ -314,12 +325,12 @@ if submit:
                 '  "kader_cumlesi": "1 cümlelik vurucu kader sözü."\n'
                 "}"
             )
-            
+
             completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model=GROQ_MODEL,
                 messages=[
                     {
-                        "role": "system", 
+                        "role": "system",
                         "content": (
                             "Sen %100 Türkçe konuşan bilge bir ruhsal rehbersin. "
                             "Kullanıcı verilerini psikolojik mekanizmalara dönüştürürsün. "
@@ -329,32 +340,37 @@ if submit:
                     {"role": "user", "content": prompt_metni}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.65 
+                temperature=0.65
             )
-            
+
             try:
                 res_data = json.loads(completion.choices[0].message.content)
             except Exception:
                 res_data = {}
-            
+
             # Save to session state
             st.session_state.analiz_verisi = res_data
             st.session_state.ruh_yasi = yas + random.randint(7, 24)
             st.session_state.tikaniklik_secimi = tikaniklik
             st.session_state.soru_hakki = 3
             st.session_state.sohbet_gecmisi = []
-            
+
             # Kayıt İşlemi
             try:
-                requests.post(SCRIPT_URL, json={
-                    "email": email, 
-                    "tikaniklik": tikaniklik,
-                    "analiz": res_data.get('analiz', ''), 
-                    "soru": res_data.get('soru', '')
-                }, timeout=15)
-            except: 
+                if SCRIPT_URL:
+                    requests.post(
+                        SCRIPT_URL,
+                        json={
+                            "email": email,
+                            "tikaniklik": tikaniklik,
+                            "analiz": res_data.get("analiz", ""),
+                            "soru": res_data.get("soru", "")
+                        },
+                        timeout=15
+                    )
+            except Exception:
                 pass
-            
+
             placeholder.empty()
 
         except Exception as e:
@@ -364,94 +380,94 @@ if submit:
 if st.session_state.analiz_verisi:
     res_data = st.session_state.analiz_verisi
     tikaniklik = st.session_state.tikaniklik_secimi
-    
+
     st.markdown("---")
     st.subheader("Ruhsal Haritan ve Atasal Mirasın")
-    
+
     c1, c2 = st.columns(2)
     with c1:
         st.write("🌿 **Sana Miras Kalan Güç**")
-        for i in res_data.get('isik', []): 
+        for i in res_data.get("isik", []):
             st.markdown(
-                f'<div class="success-box">{html.escape(i)}</div>', 
+                f'<div class="success-box">{html.escape(i)}</div>',
                 unsafe_allow_html=True
             )
     with c2:
         st.write("🟠 **Dönüşmeyi Bekleyen Yük**")
-        for g in res_data.get('golge', []): 
+        for g in res_data.get("golge", []):
             st.markdown(
-                f'<div class="error-box">{html.escape(g)}</div>', 
+                f'<div class="error-box">{html.escape(g)}</div>',
                 unsafe_allow_html=True
             )
 
     st.markdown(
         f'<div class="main-text">'
-        f'{html.escape(res_data.get("analiz", "Analiz bulunamadı."))}</div>', 
+        f'{html.escape(res_data.get("analiz", "Analiz bulunamadı."))}</div>',
         unsafe_allow_html=True
     )
-    
+
     # 1. KADER CÜMLESİ (VİRAL)
-    kader_cumlesi = res_data.get('kader_cumlesi', '')
+    kader_cumlesi = res_data.get("kader_cumlesi", "")
     if kader_cumlesi:
         st.write("### ⚡ Kader Cümlen")
         st.markdown(
-            f'<div class="kader-box">"{html.escape(kader_cumlesi)}"</div>', 
+            f'<div class="kader-box">"{html.escape(kader_cumlesi)}"</div>',
             unsafe_allow_html=True
         )
-    
+
     # 2. RUH YAŞI
-    ruh_yasi_yorumu = res_data.get('ruh_yasi_yorumu', '')
+    ruh_yasi_yorumu = res_data.get("ruh_yasi_yorumu", "")
     if ruh_yasi_yorumu:
         st.write("### ⏳ Ruh Yaşın")
         st.markdown(
             f'<h1 style="text-align:center; color:#8b7355; margin:0;">'
-            f'{st.session_state.ruh_yasi}</h1>', 
+            f'{st.session_state.ruh_yasi}</h1>',
             unsafe_allow_html=True
         )
         st.markdown(
             f'<div class="hikaye-box" style="text-align:center;">'
-            f'{html.escape(ruh_yasi_yorumu)}</div>', 
-            unsafe_allow_html=True
-        )
-    
-    # 3. SEMBOLİK AİLE HİKAYESİ
-    sembolik_hikaye = res_data.get('sembolik_aile_hikayesi', '')
-    if sembolik_hikaye:
-        st.write("### 🏛️ Sembolik Aile Hikayesi")
-        st.markdown(
-            f'<div class="hikaye-box">{html.escape(sembolik_hikaye)}</div>', 
-            unsafe_allow_html=True
-        )
-    
-    # 4. HAYAT FRAGMANI
-    fragman = res_data.get('hayat_fragmani', '')
-    if fragman:
-        st.write("### 🎬 Hayatının Fragmanı")
-        st.markdown(
-            f'<div class="fragman-box">▶ {html.escape(fragman)}</div>', 
-            unsafe_allow_html=True
-        )
-    
-    # 5. GELECEKTEN MEKTUP
-    mektup = res_data.get('gelecek_mektubu', '')
-    if mektup:
-        st.write("### 📜 Gelecekten Bir Mektup (7 Yıl Sonra)")
-        st.markdown(
-            f'<div class="mektup-box">"{html.escape(mektup)}"</div>', 
+            f'{html.escape(ruh_yasi_yorumu)}</div>',
             unsafe_allow_html=True
         )
 
-    soru_metni = res_data.get('soru', '')
+    # 3. SEMBOLİK AİLE HİKAYESİ
+    sembolik_hikaye = res_data.get("sembolik_aile_hikayesi", "")
+    if sembolik_hikaye:
+        st.write("### 🏛️ Sembolik Aile Hikayesi")
+        st.markdown(
+            f'<div class="hikaye-box">{html.escape(sembolik_hikaye)}</div>',
+            unsafe_allow_html=True
+        )
+
+    # 4. HAYAT FRAGMANI
+    fragman = res_data.get("hayat_fragmani", "")
+    if fragman:
+        st.write("### 🎬 Hayatının Fragmanı")
+        st.markdown(
+            f'<div class="fragman-box">▶ {html.escape(fragman)}</div>',
+            unsafe_allow_html=True
+        )
+
+    # 5. GELECEKTEN MEKTUP
+    mektup = res_data.get("gelecek_mektubu", "")
+    if mektup:
+        st.write("### 📜 Gelecekten Bir Mektup (7 Yıl Sonra)")
+        st.markdown(
+            f'<div class="mektup-box">"{html.escape(mektup)}"</div>',
+            unsafe_allow_html=True
+        )
+
+    soru_metni = res_data.get("soru", "")
     if soru_metni:
         st.warning(f"🔍 **Ruhuna Soru:** {html.escape(soru_metni)}")
-    
-    cta = res_data.get('cta', '')
+
+    cta = res_data.get("cta", "")
     if cta:
         st.markdown(
             f"<div style='text-align: center; border: 2px dashed #4caf50; "
             f"padding: 30px; border-radius: 20px; color: #2e7d32; "
             f"font-weight: bold; background: #f1f8e9;'>"
-            f"🎯 {html.escape(cta)}</div>", 
+            f"🎯 {html.escape(cta)}</div>",
             unsafe_allow_html=True
         )
 
@@ -463,48 +479,51 @@ if st.session_state.analiz_verisi:
         "Para & Bereket": "https://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-para-bereket.webp",
         "İlişkiler": "https://www.seraphano.com/wp-content/uploads/2026/04/tilsimli-kartlar-iliskiler.webp"
     }
-    
+
     if tikaniklik in tilsim_kartlari:
         st.image(tilsim_kartlari[tikaniklik], use_container_width=True)
-        
-        mesaj_metni = "Köklerin Gizemi analizimi yaptım! ✨ Sen de denemelisin: https://seraphano-analiz.streamlit.app"
-        
+
+        mesaj_metni = (
+            "Köklerin Gizemi analizimi yaptım! ✨ "
+            "Sen de denemelisin: https://seraphano-analiz.streamlit.app"
+        )
+
         if kader_cumlesi:
             mesaj = f'"{kader_cumlesi}"\n\n{mesaj_metni}'
         else:
             mesaj = mesaj_metni
-            
+
         share_msg = urllib.parse.quote(mesaj)
-        
+
         st.markdown(
             f"<div style='text-align: center; margin-top: 15px; margin-bottom: 40px;'>"
             f"<a href='https://api.whatsapp.com/send?text={share_msg}' "
             f"target='_blank' style='background-color: #25D366; color: white; "
             f"padding: 12px 25px; text-decoration: none; border-radius: 30px; "
-            f"font-weight: bold;'>🌿 WhatsApp'ta Paylaş</a></div>", 
+            f"font-weight: bold;'>🌿 WhatsApp'ta Paylaş</a></div>",
             unsafe_allow_html=True
         )
 
     # --- 3 SORULUK ETKİLEŞİMLİ DEVAM ANALİZİ ---
     st.markdown("---")
     st.subheader("💬 Aynaya Sor")
-    
+
     if st.session_state.soru_hakki > 0:
         st.info(
             f"Analizinle ilgili {st.session_state.soru_hakki} "
             f"soru sorabilirsin."
         )
-        
+
         for msg in st.session_state.sohbet_gecmisi:
             st.chat_message(msg["role"]).write(msg["content"])
-            
+
         kullanici_sorusu = st.chat_input("Aynaya fısılda...")
         if kullanici_sorusu:
             st.session_state.sohbet_gecmisi.append(
                 {"role": "user", "content": kullanici_sorusu}
             )
             st.chat_message("user").write(kullanici_sorusu)
-            
+
             with st.spinner("Kadim bilgelik yanıtlıyor..."):
                 try:
                     chat_context = (
@@ -512,12 +531,12 @@ if st.session_state.analiz_verisi:
                         f"{json.dumps(res_data, ensure_ascii=False)}\n\n"
                         f"Danışanın sorusu: {kullanici_sorusu}"
                     )
-                    
+
                     chat_completion = client.chat.completions.create(
-                        model="llama-3.3-70b-versatile",
+                        model=GROQ_MODEL,
                         messages=[
                             {
-                                "role": "system", 
+                                "role": "system",
                                 "content": (
                                     "Sen Serap Hano'sun. Danışanın sorusunu kısa, "
                                     "şiirsel, sarsıcı ve SADECE mevcut analiz "
@@ -528,7 +547,7 @@ if st.session_state.analiz_verisi:
                         ],
                         temperature=0.6
                     )
-                    
+
                     cevap = chat_completion.choices[0].message.content
                     st.session_state.sohbet_gecmisi.append(
                         {"role": "assistant", "content": cevap}
@@ -540,6 +559,7 @@ if st.session_state.analiz_verisi:
     else:
         for msg in st.session_state.sohbet_gecmisi:
             st.chat_message(msg["role"]).write(msg["content"])
+
         st.warning(
             "Aynaya sorabileceğin sorular tükendi. "
             "Ruhunun derinliklerine dönüp yanıtları kendinde arama vakti."
